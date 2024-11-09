@@ -108,5 +108,12 @@ public:
 
     sf::Color GetColor() { return color; }
 
+    // Serialization function
+    template<class Archive>
+    void serialize(Archive& ar, const unsigned int /*version*/) {
+        ar& id;
+        ar& name;
+        ar& value;
+    }
 };
 

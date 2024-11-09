@@ -23,7 +23,7 @@ private:
 
 public:
     LineLink connectedObjects = LineLink(lineLength);
-    std::vector<BaseShape*> ballsList;  // Changed to BaseShape* to store any shapes that derive from BaseShape
+    std::vector<BaseShape*> objList;  // Changed to BaseShape* to store any shapes that derive from BaseShape
 
     ObjectsList(float lineLength) :lineLength(lineLength) { // Adjust cell size as needed
         rnd.seed(static_cast<unsigned>(std::time(nullptr)));
@@ -34,10 +34,10 @@ public:
     }
 
     void DeleteAll() {
-        for (auto ball : ballsList) {
+        for (auto ball : objList) {
             delete ball;
         }
-        ballsList.clear();
+        objList.clear();
         planetList.clear();
         connectedObjects.Clear();
         ballCount = 0;
@@ -52,7 +52,7 @@ public:
         int randomRadius = radiusRange(rnd);
         int mass = randomRadius * 3;//no real meaning for the multiply
         BaseShape* ball = new Circle(randomRadius, color, position, gravity, mass, initialVel);
-        ballsList.push_back(ball); // Pushing back the BaseShape* into the vector
+        objList.push_back(ball); // Pushing back the BaseShape* into the vector
         ballCount += 1;
         return ball;
         // std::cout << "Creating ball at position: (" << position.x << ", " << position.y << ")\n";
@@ -62,7 +62,7 @@ public:
         float gravity = 0;
         Planet* planet = new Planet(radius, color, pos, gravity, mass, innerGravity);
         //^^^^^^float radius, sf::Color color, sf::Vector2f pos, float gravity, double mass, float innerGravity^^^^
-        ballsList.push_back(planet); // Pushing back the BaseShape* into the vector
+        objList.push_back(planet); // Pushing back the BaseShape* into the vector
         planetList.push_back(planet); // Pushing back the BaseShape* into the vector
         ballCount += 1;
     }
@@ -78,7 +78,7 @@ public:
         sf::Vector2f position(pos);
 
         BaseShape* ball = new RectangleClass(randomWidth, randomHeight, color, position, gravity, mass);
-        ballsList.push_back(ball); // Pushing back the BaseShape* into the vector
+        objList.push_back(ball); // Pushing back the BaseShape* into the vector
         ballCount += 1;
 
         // std::cout << "Creating ball at position: (" << position.x << ", " << position.y << ")\n";
@@ -182,7 +182,7 @@ public:
 
     void HandleAllCollisions(sf::RenderWindow& window, float elastic) {
         if (elastic == 0) { // Verlet integration
-            for (auto& obj : ballsList) {
+            for (auto& obj : objList) {
                 // Check if obj is a Circle
                 if (Circle* circle = dynamic_cast<Circle*>(obj)) {
                     circle->handleWallCollision(window);
@@ -229,7 +229,7 @@ public:
             }
         }
         else { // Euler integration
-            for (auto& obj : ballsList) {
+            for (auto& obj : objList) {
                 // Check if obj is a Circle
                 if (Circle* circle = dynamic_cast<Circle*>(obj)) {
                     circle->handleWallCollision(window);
@@ -271,11 +271,11 @@ public:
     }
 
     void DeleteThisObj(BaseShape* obj) {
-        auto potentialErased = std::find(ballsList.begin(), ballsList.end(), obj);
+        auto potentialErased = std::find(objList.begin(), objList.end(), obj);
 
         // If found, erase it from the vector
-        if (potentialErased != ballsList.end()) {
-            ballsList.erase(potentialErased);
+        if (potentialErased != objList.end()) {
+            objList.erase(potentialErased);
         }
         delete obj;
     }
@@ -293,7 +293,7 @@ public:
 
         grid->clear(); // Clear the grid
 
-        for (auto& ball : ballsList) {
+        for (auto& ball : objList) {
             grid->InsertObj(ball); // Inserting BaseShape* objects
         }
 
@@ -307,7 +307,7 @@ public:
         }
         for (auto& planet : planetList)
         {
-            for (auto& ball : ballsList) {
+            for (auto& ball : objList) {
                 if (typeid(*ball) != typeid(*planet))
                 {
                     planet->Gravitate(ball);
@@ -315,17 +315,17 @@ public:
             }
         }
         connectedObjects.Draw(window);
-        grid->DrawGrids(window);
+        //grid->DrawGrids(window);
         if (planetMode)
         {
-            for (auto& ball : ballsList) {
+            for (auto& ball : objList) {
                 ball->updatePositionEuler(deltaTime);
                 ball->draw(window);
             }
         }
         else
         {
-            for (auto& ball : ballsList) {
+            for (auto& ball : objList) {
                 ball->updatePositionVerlet(deltaTime);
                 ball->draw(window);
             }

@@ -1,7 +1,7 @@
 #pragma once
 #include <unordered_map>
 #include <iostream> 
-#include "CircleBase.h"
+#include "Circle.h"
 #include "Rectangle.h"
 #include <random>  // For random number generation
 #include <ctime>   // For seeding with current time
@@ -61,7 +61,7 @@ private:
 	}
 
 public:
-	GridUnorderd() {}; // Constructor
+	GridUnorderd() : Grid() {}; // Constructor
 
 	// Insert the circle by getting the hash Key and putting it in the unordered map 
 	void InsertObj(BaseShape* obj) override {
@@ -194,6 +194,7 @@ public:
 		return rectangle;
 	}
 
+	//Draws the grids visually
 	void DrawGrids(sf::RenderWindow& window) override {
 		for (auto& keyAndObject : gridMap) {
 			int hashKey = keyAndObject.first;
@@ -211,14 +212,14 @@ public:
 		}
 	}
 };
-
+ 
 class GridFixed :public Grid {
 private:
 	std::vector<std::vector<std::vector<BaseShape*>>> grids;
 	int gridSize = 3;
 
 public:
-	GridFixed() {}
+	GridFixed() : Grid() {}
 
 	void InsertObj(BaseShape* obj) override {
 		int gridColumn = GetGridColumn(obj);

@@ -41,7 +41,7 @@ protected:
     bool connectingMode = false;
     bool planetMode = false;
     bool enableCollison = true;
-    bool borderless=false;
+    bool borderless=true;
 
     // Physics and simulation parameters
     float lineLength = 150;

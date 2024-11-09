@@ -105,7 +105,7 @@ public:
         float correctionMagnitude = std::min(std::abs(deltaLength * 0.5f), maxCorrection);
         // Calculate correction vector component-wise
         sf::Vector2f correction(
-            normalizedVector.x * correctionMagnitude * (deltaLength > 0 ? 1 : -1),
+            normalizedVector.x * correctionMagnitude * (deltaLength > 0 ? 1 : -1), // if deltaLength >0 then 1 else -1
             normalizedVector.y * correctionMagnitude * (deltaLength > 0 ? 1 : -1)
         );
         // Apply correction with damping
