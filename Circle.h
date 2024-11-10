@@ -2,6 +2,7 @@
 #include <SFML/Graphics.hpp>
 #include <iostream> 
 #include "BaseShape.h"
+#include "SFMLSerialization.hpp"
 
 // Base_Shape class inheriting from sf::Transformable
 class Circle :public BaseShape, public sf::CircleShape
@@ -12,6 +13,7 @@ private:
 
 
 public:
+    Circle() :BaseShape(), radius(0.0),velocity((0.0),(0.0)) {}; // must have deffult constructor for networking
     // Constructor with radius, color, gravity, mass
     Circle(sf::Color color, float gravity, double mass, float radius)
         : BaseShape(color, gravity, mass), radius(radius)
@@ -225,7 +227,7 @@ public:
     {
         setRadius(newRadius);
         radius = newRadius;
-        setOrigin(sf::Vector2f(radius,radius));
+        setOrigin(sf::Vector2f(radius, radius));
     }
 
     float GetRadius() {
@@ -241,6 +243,12 @@ public:
         setOutlineColor(color);
     }
 
+    template<class Archive>
+    void serialize(Archive& ar, const unsigned int version) {
+        ar& boost::serialization::base_object<BaseShape>(*this); // Serialize the base class part
+        ar& radius;
+        ar& velocity;
+    }
 
     // Function to draw the circle
     void draw(sf::RenderWindow& window)

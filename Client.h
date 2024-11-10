@@ -1,12 +1,18 @@
+#pragma once
 #include <boost/asio.hpp>
 #include <iostream>
 #include <thread>
 #include <string>
 #include <deque>
 #include <mutex>
+#include <SFML/Graphics.hpp>;
+#include <SFML/Window.hpp>
 #include "BaseShape.h"
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
+#include "PhysicsSimulatotion.h"
+#include "Options.h"
+#include "UI.h"
 
 
 using boost::asio::ip::tcp;
@@ -160,14 +166,6 @@ private:
             });
     }
 
-    std::vector<BaseShape> deserializeBaseShapeVector(const std::string& serializedData) {
-        std::istringstream iss(serializedData);    // Input string stream to hold binary data
-        boost::archive::binary_iarchive ia(iss);   // Binary input archive for deserialization
-        std::vector<BaseShape> shapes;             // Vector to hold deserialized BaseShape objects
-        ia >> shapes;                              // Deserialize into the vector
-        return shapes;                             // Return the vector of BaseShape objects
-    }
-
 
     boost::asio::io_context& io_context_;
     tcp::socket tcp_socket_;
@@ -181,6 +179,49 @@ private:
     char udp_data_[max_length];
     std::deque<std::string> tcp_message_queue_;
 };
+
+void initializeWindow(sf::RenderWindow& window, sf::View view, sf::ContextSettings settings) {
+    window.create(
+        sf::VideoMode(options.window_width, options.window_height), "TomySim", sf::Style::Default, settings);
+    view = window.getDefaultView();
+    window.setVerticalSyncEnabled(true);
+    window.setFramerateLimit(60);
+}
+
+void toggleFullscreen(sf::RenderWindow& window) {
+    if (!options.fullscreen) {
+        window.create(options.desktopSize, "Fullscreen Mode", sf::Style::Fullscreen);
+        options.fullscreen = true;
+    }
+    else {
+        window.create(sf::VideoMode(1920, 980), "Tomy Mode", sf::Style::Default);
+        options.fullscreen = false;
+    }
+    window.setVerticalSyncEnabled(true);
+}
+
+void Run(std::string& screen, PhysicsSimulationLocal& simulation, MainMenu& mainMenu, Settings& settingsClass, sf::RenderWindow& window) {
+    while (window.isOpen()) {
+        if (screen == "START") {
+            screen = simulation.Run();
+        }
+        else if (screen == "MAIN MENU") {
+            screen = mainMenu.handleMainMenu();
+        }
+        else if (screen == "SETTINGS") {
+            screen = settingsClass.handleSettings();
+        }
+        else if (screen == "FULLSCREEN") {
+            toggleFullscreen(window);
+            screen = settingsClass.handleSettings();
+        }
+        else {
+            window.close();
+            break;  //  break to exit the loop when closing
+        }
+    }
+}
+
 
 int main() {
     try {
@@ -211,9 +252,25 @@ int main() {
         std::cout << "- Type 'connect' to start connection attempts" << std::endl;
         std::cout << "- Type 'quit' to exit" << std::endl;
 
+        //ENGINE:
+        sf::RenderWindow window;
+        sf::ContextSettings settings;
+        settings.antialiasingLevel = 8;
+        sf::View view = window.getDefaultView();
+        initializeWindow(window, view, settings);
+
+        PhysicsSimulationLocal simulation(window);
+        MainMenu mainMenu(window);
+        Settings settingsClass(window);
+        std::string screen = "START";
+        Run(screen, simulation, mainMenu, settingsClass, window);
+
+        //ENGINE end
+
         // Main loop to get user input and send messages
         std::string input;
         while (std::getline(std::cin, input)) {
+        
             if (input == "quit") {
                 std::cout << "Shutting down client..." << std::endl;
                 client.stop_connecting();

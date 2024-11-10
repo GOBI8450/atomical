@@ -3,6 +3,7 @@
 #include <iostream> 
 #include "BaseShape.h"
 #include "Circle.h"
+#include "SFMLSerialization.hpp"
 
 class RectangleClass : public BaseShape, public sf::RectangleShape
 {
@@ -12,6 +13,7 @@ private:
     sf::Vector2f velocity;
 
 public:
+    RectangleClass() :BaseShape(), width(0.0), height(0.0), velocity((0.0), (0.0)) {}; // must have deffult constructor for networking
     // Constructor with radius, color, gravity, mass
     RectangleClass(float width, float height, sf::Color color, float gravity, double mass)
         : BaseShape(color, gravity, mass), width(width), height(height)
@@ -326,6 +328,14 @@ public:
 
     sf::Vector2f GetPosition() override {
         return getPosition();
+    }
+
+    template<class Archive>
+    void serialize(Archive& ar, const unsigned int version) {
+        ar& boost::serialization::base_object<BaseShape>(*this); // Serialize the base class part
+        ar& width;
+        ar& height;
+        ar& velocity;
     }
 };
 

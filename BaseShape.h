@@ -3,6 +3,8 @@
 #include <iostream> 
 #include <sstream>
 #include <boost/archive/binary_oarchive.hpp>
+#include "SFMLSerialization.hpp"
+
 class BaseShape
 {
 protected:
@@ -15,6 +17,18 @@ protected:
     int linked;
 
 public:
+    BaseShape() // must have deffult constructor for networking
+        : oldPosition(0.f, 0.f),
+        acceleration(0.f, 0.f),
+        color(sf::Color::White),
+        gravity(0.f),
+        mass(0.0),
+        fps(0.0),
+        linked(-1)
+    {
+        // This constructor sets default values
+    }
+
     BaseShape(sf::Color color, float gravity, double mass)
         : color(color), gravity(gravity), mass(mass)
     {

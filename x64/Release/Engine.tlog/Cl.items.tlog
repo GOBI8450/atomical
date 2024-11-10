@@ -1,5 +1,6 @@
 C:\Users\ערן\source\repos\PhysicSSimulator\BaseShape.cpp;C:\Users\ערן\source\repos\PhysicSSimulator\x64\Release\BaseShape.obj
 C:\Users\ערן\source\repos\PhysicSSimulator\Button.cpp;C:\Users\ערן\source\repos\PhysicSSimulator\x64\Release\Button.obj
+C:\Users\ערן\source\repos\PhysicSSimulator\Circle.cpp;C:\Users\ערן\source\repos\PhysicSSimulator\x64\Release\Circle.obj
 C:\Users\ערן\source\repos\PhysicSSimulator\Client.cpp;C:\Users\ערן\source\repos\PhysicSSimulator\x64\Release\Client.obj
 C:\Users\ערן\source\repos\PhysicSSimulator\Grid.cpp;C:\Users\ערן\source\repos\PhysicSSimulator\x64\Release\Grid.obj
 C:\Users\ערן\source\repos\PhysicSSimulator\LineLink.cpp;C:\Users\ערן\source\repos\PhysicSSimulator\x64\Release\LineLink.obj
@@ -9,3 +10,4 @@ C:\Users\ערן\source\repos\PhysicSSimulator\PhysicsSimulatotion.cpp;C:\Users\�
 C:\Users\ערן\source\repos\PhysicSSimulator\Planet.cpp;C:\Users\ערן\source\repos\PhysicSSimulator\x64\Release\Planet.obj
 C:\Users\ערן\source\repos\PhysicSSimulator\Rectangle.cpp;C:\Users\ערן\source\repos\PhysicSSimulator\x64\Release\Rectangle.obj
 C:\Users\ערן\source\repos\PhysicSSimulator\Source.cpp;C:\Users\ערן\source\repos\PhysicSSimulator\x64\Release\Source.obj
+C:\Users\ערן\source\repos\PhysicSSimulator\UI.cpp;C:\Users\ערן\source\repos\PhysicSSimulator\x64\Release\UI.obj

@@ -152,6 +152,7 @@ boost_asio-vc143-mt-x64-1_86.lib;%(AdditionalDependencies)</AdditionalDependenci
   <ItemGroup>
     <ClCompile Include="BaseShape.cpp" />
     <ClCompile Include="Button.cpp" />
+    <ClCompile Include="Circle.cpp" />
     <ClCompile Include="Client.cpp" />
     <ClCompile Include="Grid.cpp" />
     <ClCompile Include="LineLink.cpp" />
@@ -161,6 +162,7 @@ boost_asio-vc143-mt-x64-1_86.lib;%(AdditionalDependencies)</AdditionalDependenci
     <ClCompile Include="Planet.cpp" />
     <ClCompile Include="Rectangle.cpp" />
     <ClCompile Include="Source.cpp" />
+    <ClCompile Include="UI.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BaseShape.h" />
@@ -176,6 +178,7 @@ boost_asio-vc143-mt-x64-1_86.lib;%(AdditionalDependencies)</AdditionalDependenci
     <ClInclude Include="Rectangle.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="SFMLSerialization.hpp" />
+    <ClInclude Include="UI.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Engine.rc" />
