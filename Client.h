@@ -1,360 +1,249 @@
 #include <boost/asio.hpp>
-#include <boost/bind/bind.hpp>
-#include <boost/json.hpp>
 #include <iostream>
 #include <thread>
-#include <queue>
+#include <string>
+#include <deque>
 #include <mutex>
-#include <atomic>
-#include <chrono>
-
+#include "BaseShape.h"
+#include <boost/archive/binary_iarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
 
 
 using boost::asio::ip::tcp;
 using boost::asio::ip::udp;
 
-class GameClient {
+class Client {
 public:
-    GameClient(const std::string& host, int tcp_port, int udp_port)
-        : io_context_(),
-        work_guard_(boost::asio::make_work_guard(io_context_)),
-        tcp_socket_(io_context_),
-        udp_socket_(io_context_),
-        server_host_(host),
-        tcp_port_(tcp_port),
-        udp_port_(udp_port),
-        resolver_(io_context_),
-        reconnect_timer_(io_context_),
-        connected_(false) {
+    Client(boost::asio::io_context& io_context,
+        const std::string& host,
+        unsigned short tcp_port,
+        unsigned short udp_port)
+        : io_context_(io_context),
+        tcp_socket_(io_context),
+        udp_socket_(io_context, udp::endpoint(udp::v4(), 0)),
+        resolver_(io_context),
+        should_try_connect_(true),
+        retry_timer_(io_context) {
 
-        messages_to_send_.clear();
+        auto tcp_results = resolver_.resolve(host, std::to_string(tcp_port));
+        tcp_endpoint_ = *tcp_results.begin();
+        udp_endpoint_ = udp::endpoint(tcp_endpoint_.address(), udp_port);
     }
 
-    void start() {
-        // Start IO context in separate thread
-        io_thread_ = std::thread([this]() {
-            try {
-                io_context_.run();
-            }
-            catch (std::exception& e) {
-                std::cerr << "IO context error: " << e.what() << std::endl;
-            }
+    void stop_connecting() {
+        should_try_connect_ = false;
+        retry_timer_.cancel();
+    }
+
+    void connect() {
+        attempt_connect();
+    }
+
+    void send_tcp_message(const std::string& message) {
+        bool write_in_progress = !tcp_message_queue_.empty();
+        tcp_message_queue_.push_back(message + "\n");
+
+        if (!write_in_progress) {
+            do_tcp_write();
+        }
+    }
+
+    void send_udp_message(const std::string& message) {
+        udp_socket_.async_send_to(
+            boost::asio::buffer(message),
+            udp_endpoint_,
+            [this, message](const boost::system::error_code& ec, std::size_t /*bytes_sent*/) {
+                if (!ec) {
+                    std::cout << "UDP message sent: " << message << std::endl;
+                }
+                else {
+                    std::cout << "UDP send failed: " << ec.message() << std::endl;
+                }
             });
-
-        connectToServer();
-    }
-
-    void stop() {
-        connected_ = false;
-
-        if (tcp_socket_.is_open()) {
-            boost::system::error_code ec;
-            tcp_socket_.shutdown(tcp::socket::shutdown_both, ec);
-            tcp_socket_.close();
-        }
-
-        if (udp_socket_.is_open()) {
-            udp_socket_.close();
-        }
-
-        io_context_.stop();
-
-        if (io_thread_.joinable()) {
-            io_thread_.join();
-        }
-    }
-
-    // Send game state update via TCP
-    void sendGameState(const std::string& state) {
-        boost::json::object msg = {
-            {"type", "game_state"},
-            {"state", state}
-        };
-        sendTcpMessage(msg);
-    }
-
-    // Send position update via UDP
-    void sendPosition(float x, float y, float z) {
-        boost::json::object msg = {
-            {"type", "position"},
-            {"position", {
-                {"x", x},
-                {"y", y},
-                {"z", z}
-            }}
-        };
-        sendUdpMessage(msg);
     }
 
 private:
-    void connectToServer() {
+    void attempt_connect() {
+        if (!should_try_connect_) {
+            std::cout << "Stopped trying to connect." << std::endl;
+            return;
+        }
+
+        // Close socket if it's open before attempting new connection
+        if (tcp_socket_.is_open()) {
+            tcp_socket_.close();
+        }
+
         std::cout << "Attempting to connect to server..." << std::endl;
-
-        resolver_.async_resolve(
-            server_host_,
-            std::to_string(tcp_port_),
-            [this](const boost::system::error_code& ec, tcp::resolver::results_type endpoints) {
+        tcp_socket_.async_connect(
+            tcp_endpoint_,
+            [this](const boost::system::error_code& ec) {
                 if (!ec) {
-                    attemptConnection(endpoints);
+                    std::cout << "Connected to TCP server!" << std::endl;
+                    start_tcp_receive();
+                    start_udp_receive();
                 }
                 else {
-                    handleConnectionFailure("Resolution error: " + ec.message());
+                    std::cout << "TCP connection failed: " << ec.message() << std::endl;
+                    schedule_reconnect();
                 }
-            }
-        );
+            });
     }
 
-    void attemptConnection(const tcp::resolver::results_type& endpoints) {
-        boost::asio::async_connect(
-            tcp_socket_,
-            endpoints,
-            [this](const boost::system::error_code& ec, const tcp::endpoint&) {
-                if (!ec) {
-                    handleSuccessfulConnection();
-                }
-                else {
-                    handleConnectionFailure("Connection error: " + ec.message());
-                }
-            }
-        );
-    }
+    void schedule_reconnect() {
+        if (!should_try_connect_) return;
 
-    void handleSuccessfulConnection() {
-        std::cout << "TCP connection established!" << std::endl;
-        connected_ = true;
-
-        // Setup UDP socket
-        setupUdpSocket();
-
-        // Send initial connection message with UDP port
-        boost::json::object connect_msg = {
-            {"type", "connect"},
-            {"udp_address", udp_socket_.local_endpoint().port()}
-        };
-        sendTcpMessage(connect_msg);
-
-        // Start receiving messages
-        startReceiving();
-
-        // Send any queued messages
-        sendQueuedMessages();
-    }
-
-    void handleConnectionFailure(const std::string& error) {
-        std::cerr << error << std::endl;
-        connected_ = false;
-
-        // Schedule reconnection attempt
-        reconnect_timer_.expires_after(std::chrono::seconds(2));
-        reconnect_timer_.async_wait([this](const boost::system::error_code& ec) {
-            if (!ec) {
-                std::cout << "Attempting to reconnect..." << std::endl;
-                connectToServer();
+        std::cout << "Retrying in 5 seconds..." << std::endl;
+        retry_timer_.expires_after(std::chrono::seconds(5));
+        retry_timer_.async_wait([this](const boost::system::error_code& ec) {
+            if (!ec && should_try_connect_) {
+                attempt_connect();
             }
             });
     }
 
-    void setupUdpSocket() {
-        boost::system::error_code ec;
-        udp_socket_.open(udp::v4(), ec);
-        if (ec) {
-            std::cerr << "UDP socket open error: " << ec.message() << std::endl;
-            return;
-        }
+    // Add these as class members:
+    bool should_try_connect_;
+    boost::asio::steady_timer retry_timer_;
 
-        // Prepare UDP endpoint for sending
-        server_udp_endpoint_ = udp::endpoint(
-            boost::asio::ip::address::from_string(server_host_),
-            udp_port_
-        );
-    }
-
-    void startReceiving() {
-        // Start TCP receive
-        asyncReadTcp();
-
-        // Start UDP receive
-        asyncReadUdp();
-    }
-
-    void asyncReadTcp() {
-        tcp_socket_.async_read_some(
-            boost::asio::buffer(tcp_buffer_),
+    void start_tcp_receive() {
+        boost::asio::async_read_until(
+            tcp_socket_,
+            tcp_buffer_,
+            '\n',
             [this](const boost::system::error_code& ec, std::size_t length) {
                 if (!ec) {
-                    // Process received TCP data
-                    std::string received(tcp_buffer_.begin(), tcp_buffer_.begin() + length);
-                    processTcpMessage(received);
-                    asyncReadTcp(); // Continue reading
+                    std::string message(boost::asio::buffers_begin(tcp_buffer_.data()),
+                        boost::asio::buffers_begin(tcp_buffer_.data()) + length);
+                    tcp_buffer_.consume(length);
+
+                    std::cout << "TCP received: " << message;
+
+                    start_tcp_receive();
                 }
                 else {
-                    handleDisconnect();
+                    std::cout << "TCP receive failed: " << ec.message() << std::endl;
                 }
-            }
-        );
+            });
     }
 
-    void asyncReadUdp() {
-        udp_socket_.async_receive_from(
-            boost::asio::buffer(udp_buffer_),
-            udp_remote_endpoint_,
-            [this](const boost::system::error_code& ec, std::size_t length) {
-                if (!ec) {
-                    // Process received UDP data
-                    std::string received(udp_buffer_.begin(), udp_buffer_.begin() + length);
-                    processUdpMessage(received);
-                    asyncReadUdp(); // Continue reading
-                }
-                // For UDP, always continue reading regardless of errors
-                asyncReadUdp();
-            }
-        );
-    }
-
-    void sendTcpMessage(const boost::json::object& message) {
-        if (!connected_) {
-            // Queue message if not connected
-            messages_to_send_.push_back(boost::json::serialize(message));
-            return;
-        }
-
-        std::string msg = boost::json::serialize(message) + "\n";
+    void do_tcp_write() {
         boost::asio::async_write(
             tcp_socket_,
-            boost::asio::buffer(msg),
+            boost::asio::buffer(tcp_message_queue_.front()),
             [this](const boost::system::error_code& ec, std::size_t /*length*/) {
-                if (ec) {
-                    handleDisconnect();
-                }
-            }
-        );
-    }
-
-    void sendUdpMessage(const boost::json::object& message) {
-        if (!connected_) return;
-
-        try {
-            std::string msg = boost::json::serialize(message);
-            udp_socket_.async_send_to(
-                boost::asio::buffer(msg),
-                server_udp_endpoint_,
-                [](const boost::system::error_code& /*ec*/, std::size_t /*bytes*/) {}
-            );
-        }
-        catch (std::exception& e) {
-            std::cerr << "UDP send error: " << e.what() << std::endl;
-        }
-    }
-
-    void sendQueuedMessages() {
-        for (const auto& msg : messages_to_send_) {
-            boost::asio::async_write(
-                tcp_socket_,
-                boost::asio::buffer(msg + "\n"),
-                [this](const boost::system::error_code& ec, std::size_t /*length*/) {
-                    if (ec) {
-                        handleDisconnect();
+                if (!ec) {
+                    tcp_message_queue_.pop_front();
+                    if (!tcp_message_queue_.empty()) {
+                        do_tcp_write();
                     }
                 }
-            );
-        }
-        messages_to_send_.clear();
+                else {
+                    std::cout << "TCP write failed: " << ec.message() << std::endl;
+                }
+            });
     }
 
-    void handleDisconnect() {
-        if (!connected_) return;
-
-        connected_ = false;
-        std::cout << "Disconnected from server. Attempting to reconnect..." << std::endl;
-
-        boost::system::error_code ec;
-        tcp_socket_.close(ec);
-        connectToServer();
+    void start_udp_receive() {
+        udp_socket_.async_receive_from(
+            boost::asio::buffer(udp_data_, max_length),
+            udp_sender_endpoint_,
+            [this](const boost::system::error_code& ec, std::size_t bytes_received) {
+                if (!ec) {
+                    std::string message(udp_data_, bytes_received);
+                    std::cout << "UDP received: " << message << std::endl;
+                    start_udp_receive();
+                }
+                else {
+                    std::cout << "UDP receive failed: " << ec.message() << std::endl;
+                }
+            });
     }
 
-    void processTcpMessage(const std::string& message) {
-        try {
-            boost::json::value parsed = boost::json::parse(message);
-            // Add your message processing logic here
-            std::cout << "TCP message received: " << message << std::endl;
-        }
-        catch (std::exception& e) {
-            std::cerr << "Error processing TCP message: " << e.what() << std::endl;
-        }
+    std::vector<BaseShape> deserializeBaseShapeVector(const std::string& serializedData) {
+        std::istringstream iss(serializedData);    // Input string stream to hold binary data
+        boost::archive::binary_iarchive ia(iss);   // Binary input archive for deserialization
+        std::vector<BaseShape> shapes;             // Vector to hold deserialized BaseShape objects
+        ia >> shapes;                              // Deserialize into the vector
+        return shapes;                             // Return the vector of BaseShape objects
     }
 
-    void processUdpMessage(const std::string& message) {
-        try {
-            boost::json::value parsed = boost::json::parse(message);
-            // Add your message processing logic here
-            std::cout << "UDP message received: " << message << std::endl;
-        }
-        catch (std::exception& e) {
-            std::cerr << "Error processing UDP message: " << e.what() << std::endl;
-        }
-    }
 
-    boost::asio::io_context io_context_;
-    boost::asio::executor_work_guard<boost::asio::io_context::executor_type> work_guard_;
+    boost::asio::io_context& io_context_;
     tcp::socket tcp_socket_;
     udp::socket udp_socket_;
     tcp::resolver resolver_;
-    boost::asio::steady_timer reconnect_timer_;
-
-    std::string server_host_;
-    int tcp_port_;
-    int udp_port_;
-    std::atomic<bool> connected_;
-
-    udp::endpoint server_udp_endpoint_;
-    udp::endpoint udp_remote_endpoint_;
-
-    std::array<char, 1024> tcp_buffer_;
-    std::array<char, 1024> udp_buffer_;
-
-    std::vector<std::string> messages_to_send_;
-    std::thread io_thread_;
+    tcp::endpoint tcp_endpoint_;
+    udp::endpoint udp_endpoint_;
+    udp::endpoint udp_sender_endpoint_;
+    boost::asio::streambuf tcp_buffer_;
+    enum { max_length = 1024 };
+    char udp_data_[max_length];
+    std::deque<std::string> tcp_message_queue_;
 };
 
-// Example usage
 int main() {
     try {
-        GameClient client("127.0.0.1", 5000, 5001);
-        client.start();
+        const std::string server_ip = "127.0.0.1";  // or "localhost"
+        unsigned short tcp_port = 8080;
+        unsigned short udp_port = 8081;
 
-        std::cout << "Client started. Commands:\n"
-            << "1. 'pos x y z' to send position\n"
-            << "2. 'state <message>' to send game state\n"
-            << "3. 'quit' to exit\n";
+        std::cout << "Starting client..." << std::endl;
+        std::cout << "Attempting to connect to:" << std::endl;
+        std::cout << "Server IP: " << server_ip << std::endl;
+        std::cout << "TCP port: " << tcp_port << std::endl;
+        std::cout << "UDP port: " << udp_port << std::endl;
 
+        boost::asio::io_context io_context;
+
+        Client client(io_context, server_ip, tcp_port, udp_port);
+        client.connect();
+
+        // Start a thread to run the IO service
+        std::thread io_thread([&io_context]() {
+            io_context.run();
+            });
+
+        std::cout << "\nAvailable commands:" << std::endl;
+        std::cout << "- Type a message to send via TCP" << std::endl;
+        std::cout << "- Type 'udp:' followed by a message to send via UDP" << std::endl;
+        std::cout << "- Type 'stop' to stop connection attempts" << std::endl;
+        std::cout << "- Type 'connect' to start connection attempts" << std::endl;
+        std::cout << "- Type 'quit' to exit" << std::endl;
+
+        // Main loop to get user input and send messages
         std::string input;
         while (std::getline(std::cin, input)) {
             if (input == "quit") {
+                std::cout << "Shutting down client..." << std::endl;
+                client.stop_connecting();
                 break;
             }
-
-            // Parse commands
-            std::istringstream iss(input);
-            std::string command;
-            iss >> command;
-
-            if (command == "pos") {
-                float x, y, z;
-                if (iss >> x >> y >> z) {
-                    client.sendPosition(x, y, z);
-                }
+            if (input == "stop") {
+                client.stop_connecting();
+                std::cout << "Stopped connection attempts." << std::endl;
+                continue;
             }
-            else if (command == "state") {
-                std::string state;
-                std::getline(iss >> std::ws, state);
-                client.sendGameState(state);
+            if (input == "connect") {
+                std::cout << "Starting connection attempts..." << std::endl;
+                client.connect();
+                continue;
+            }
+
+            if (input.substr(0, 4) == "udp:") {
+                client.send_udp_message(input.substr(4));
+            }
+            else {
+                client.send_tcp_message(input);
             }
         }
 
-        client.stop();
+        io_context.stop();
+        io_thread.join();
     }
     catch (std::exception& e) {
-        std::cerr << "Error: " << e.what() << std::endl;
+        std::cerr << "Fatal error: " << e.what() << std::endl;
+        return 1;
     }
 
     return 0;

@@ -23,7 +23,7 @@ private:
 
 public:
     LineLink connectedObjects = LineLink(lineLength);
-    std::vector<BaseShape*> objList;  // Changed to BaseShape* to store any shapes that derive from BaseShape
+    std::vector<BaseShape*> objList;
 
     ObjectsList(float lineLength) :lineLength(lineLength) { // Adjust cell size as needed
         rnd.seed(static_cast<unsigned>(std::time(nullptr)));
@@ -280,6 +280,14 @@ public:
         delete obj;
     }
 
+    std::vector<BaseShape> ConvertForSending() {
+        std::vector<BaseShape> objectsVec_NON_POINTER;
+        for (auto& obj: objList)
+        {
+            objectsVec_NON_POINTER.push_back(*obj);
+        }
+        return objectsVec_NON_POINTER;
+    }
 
     void MoveAndDraw(sf::RenderWindow& window, float fps, float elastic,bool planetMode, bool enableCollison, bool borderless) {
         if (borderless)

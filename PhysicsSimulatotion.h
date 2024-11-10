@@ -586,5 +586,9 @@ private:
             sf::sleep(sf::seconds(deltaTime - elapsed.asSeconds()));
         }
     }
+
+    std::vector<BaseShape> ConvertForSending() {
+
+    }
 };
 

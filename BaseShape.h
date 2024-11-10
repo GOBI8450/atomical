@@ -1,6 +1,8 @@
 #pragma once
 #include <SFML/Graphics.hpp>
 #include <iostream> 
+#include <sstream>
+#include <boost/archive/binary_oarchive.hpp>
 class BaseShape
 {
 protected:
@@ -108,12 +110,17 @@ public:
 
     sf::Color GetColor() { return color; }
 
-    // Serialization function
+    //// Define a serialization function for BaseShape
     template<class Archive>
-    void serialize(Archive& ar, const unsigned int /*version*/) {
-        ar& id;
-        ar& name;
-        ar& value;
+    void serialize(Archive& ar, const unsigned int version) {
+        ar& oldPosition;
+        ar& acceleration;
+        ar& color;
+        ar& gravity;
+        ar& mass;
+        ar& fps;
+        ar& linked;
     }
+
 };
 
