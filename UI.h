@@ -43,10 +43,10 @@ public:
     };
 
     bool loadTextures() {
-        if (!startButtonTexture.loadFromFile("START.png")) return false;
-        if (!exitButtonTexture.loadFromFile("EXIT.png")) return false;
-        if (!settingsButtonTexture.loadFromFile("SETTINGS.png")) return false;
-        if (!mainMenuHeaderTexture.loadFromFile("Header.png")) return false;
+        if (!startButtonTexture.loadFromFile("visuals/START.png")) return false;
+        if (!exitButtonTexture.loadFromFile("visuals/EXIT.png")) return false;
+        if (!settingsButtonTexture.loadFromFile("visuals/SETTINGS.png")) return false;
+        if (!mainMenuHeaderTexture.loadFromFile("visuals/Header.png")) return false;
 
         startButtonTexture.setSmooth(true);
         exitButtonTexture.setSmooth(true);
@@ -144,9 +144,9 @@ public:
     }
 
     bool loadTextures() {
-        if (!fullscreenButtonTexture.loadFromFile("FULLSCREEN.png")) { return false; }
-        if (!settingsHeaderTexture.loadFromFile("SETTINGS_HEADER.png")) { return false; }
-        if (!exitButtonTexture.loadFromFile("EXIT.png")) { return false; }
+        if (!fullscreenButtonTexture.loadFromFile("visuals/FULLSCREEN.png")) { return false; }
+        if (!settingsHeaderTexture.loadFromFile("visuals/SETTINGS_HEADER.png")) { return false; }
+        if (!exitButtonTexture.loadFromFile("visuals/EXIT.png")) { return false; }
 
         exitButtonTexture.setSmooth(true);
         settingsHeaderTexture.setSmooth(true);

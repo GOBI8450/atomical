@@ -478,7 +478,7 @@ private:
     }
 
     void loadResources() {
-        if (!font.loadFromFile("font.ttf")) {
+        if (!font.loadFromFile("visuals/font.ttf")) {
             throw std::runtime_error("Failed to load font");
         }
         loadTextures();
