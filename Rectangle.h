@@ -15,8 +15,8 @@ private:
 public:
     RectangleClass() :BaseShape(), width(0.0), height(0.0), velocity((0.0), (0.0)) {}; // must have deffult constructor for networking
     // Constructor with radius, color, gravity, mass
-    RectangleClass(float width, float height, sf::Color color, float gravity, double mass)
-        : BaseShape(color, gravity, mass), width(width), height(height)
+    RectangleClass(float width, float height, sf::Color color, float gravity, double mass,int objCount)
+        : BaseShape(color, gravity, mass, objCount), width(width), height(height)
     {
         setSize(sf::Vector2f(width, height));
         setFillColor(color);
@@ -27,8 +27,8 @@ public:
     }
 
     // Constructor with radius, color, gravity, mass, position
-    RectangleClass(float width, float height, sf::Color color, sf::Vector2f pos, float gravity, double mass)
-        : BaseShape(color, gravity, mass), width(width), height(height)
+    RectangleClass(float width, float height, sf::Color color, sf::Vector2f pos, float gravity, double mass, int objCount)
+        : BaseShape(color, gravity, mass, objCount), width(width), height(height)
     {
         setSize(sf::Vector2f(width, height));
         setFillColor(color);

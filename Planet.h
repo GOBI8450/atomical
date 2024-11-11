@@ -9,7 +9,7 @@ private:
 	float innerGravity;
 
 public:
-	Planet(float radius, sf::Color color, sf::Vector2f pos, float gravity, double mass, float innerGravity) : Circle(radius, color, pos, gravity, mass,sf::Vector2f(0,0)), innerGravity(innerGravity) {
+	Planet(float radius, sf::Color color, sf::Vector2f pos, float gravity, double mass, float innerGravity, int objCount) : Circle(radius, color, pos, gravity, mass,sf::Vector2f(0,0), objCount), innerGravity(innerGravity) {
 
 	}
 

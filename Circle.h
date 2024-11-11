@@ -15,8 +15,8 @@ private:
 public:
     Circle() :BaseShape(), radius(0.0),velocity((0.0),(0.0)) {}; // must have deffult constructor for networking
     // Constructor with radius, color, gravity, mass
-    Circle(sf::Color color, float gravity, double mass, float radius)
-        : BaseShape(color, gravity, mass), radius(radius)
+    Circle(sf::Color color, float gravity, double mass, float radius, int objCount)
+        : BaseShape(color, gravity, mass, objCount), radius(radius)
     {
         setRadius(radius);
         setFillColor(color);
@@ -27,8 +27,8 @@ public:
     }
 
     // Constructor with radius, color, gravity, mass, position
-    Circle(float radius, sf::Color color, sf::Vector2f pos, float gravity, double mass, sf::Vector2f initialVel)
-        : BaseShape(color, gravity, mass), radius(radius)
+    Circle(float radius, sf::Color color, sf::Vector2f pos, float gravity, double mass, sf::Vector2f initialVel, int objCount)
+        : BaseShape(color, gravity, mass, objCount), radius(radius)
     {
         setRadius(radius);
         setFillColor(color);

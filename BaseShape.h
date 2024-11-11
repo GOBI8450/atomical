@@ -15,6 +15,7 @@ protected:
     double mass;//be as fat as you want brotha
     double fps;//my worst enemy
     int linked;
+    int id;
 
 public:
     BaseShape() // must have deffult constructor for networking
@@ -24,15 +25,17 @@ public:
         gravity(0.f),
         mass(0.0),
         fps(0.0),
-        linked(-1)
+        linked(-1),
+        id(-1)
     {
         // This constructor sets default values
     }
 
-    BaseShape(sf::Color color, float gravity, double mass)
+    BaseShape(sf::Color color, float gravity, double mass, int objCount)
         : color(color), gravity(gravity), mass(mass)
     {
         linked = -1;
+        id = objCount;
         acceleration = sf::Vector2f(0, gravity ); //(x axis, y axis)
     }
     // Copy constructor
@@ -123,6 +126,11 @@ public:
 
 
     sf::Color GetColor() { return color; }
+
+    int GetID() { return id; };
+
+    std::string GetIDStr(){ return std::to_string(id); }
+
 
     //// Define a serialization function for BaseShape
     template<class Archive>

@@ -15,7 +15,7 @@
 class ObjectsList
 {
 private:
-    int ballCount = 0;
+    int objCount = 0;
     std::mt19937 rnd;
     Grid* grid;
     std::vector<Planet*> planetList;
@@ -40,7 +40,7 @@ public:
         objList.clear();
         planetList.clear();
         connectedObjects.Clear();
-        ballCount = 0;
+        objCount = 0;
     }
 
     BaseShape* CreateNewCircle(float gravity, sf::Color color, sf::Vector2f pos, sf::Vector2f initialVel) {
@@ -51,20 +51,20 @@ public:
         sf::Vector2f position(pos);
         int randomRadius = radiusRange(rnd);
         int mass = randomRadius * 3;//no real meaning for the multiply
-        BaseShape* ball = new Circle(randomRadius, color, position, gravity, mass, initialVel);
+        BaseShape* ball = new Circle(randomRadius, color, position, gravity, mass, initialVel, objCount);
         objList.push_back(ball); // Pushing back the BaseShape* into the vector
-        ballCount += 1;
+        objCount += 1;
         return ball;
         // std::cout << "Creating ball at position: (" << position.x << ", " << position.y << ")\n";
     }
 
     void CreateNewPlanet(float innerGravity, sf::Color color, sf::Vector2f pos, float radius, float mass) {
         float gravity = 0;
-        Planet* planet = new Planet(radius, color, pos, gravity, mass, innerGravity);
+        Planet* planet = new Planet(radius, color, pos, gravity, mass, innerGravity, objCount);
         //^^^^^^float radius, sf::Color color, sf::Vector2f pos, float gravity, double mass, float innerGravity^^^^
         objList.push_back(planet); // Pushing back the BaseShape* into the vector
         planetList.push_back(planet); // Pushing back the BaseShape* into the vector
-        ballCount += 1;
+        objCount += 1;
     }
 
     void CreateNewRectangle(float gravity, sf::Color color, sf::Vector2f pos) {
@@ -77,9 +77,9 @@ public:
         int mass = (randomWidth + randomHeight) * 2;//no real meaning for the multiply
         sf::Vector2f position(pos);
 
-        BaseShape* ball = new RectangleClass(randomWidth, randomHeight, color, position, gravity, mass);
+        BaseShape* ball = new RectangleClass(randomWidth, randomHeight, color, position, gravity, mass, objCount);
         objList.push_back(ball); // Pushing back the BaseShape* into the vector
-        ballCount += 1;
+        objCount += 1;
 
         // std::cout << "Creating ball at position: (" << position.x << ", " << position.y << ")\n";
     }
