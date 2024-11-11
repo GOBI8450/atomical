@@ -1,1 +1,3 @@
 C:\Users\ערן\source\repos\PhysicSSimulator\x64\Release\Engine.exe
+C:\Users\ערן\source\repos\PhysicSSimulator\x64\Release\PhysicSSimulator.vcxproj.CopyComplete
+C:\Users\ערן\source\repos\PhysicSSimulator\x64\Release\boost_serialization-vc143-mt-x64-1_86.dll
