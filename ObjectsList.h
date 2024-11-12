@@ -289,6 +289,15 @@ public:
         return objectsVec_NON_POINTER;
     }
 
+    void DrawObjVec(sf::RenderWindow& window, float fps) {
+        float deltaTime = 1 / fps;
+        for (auto& ball : objList) {
+            ball->updatePositionVerlet(deltaTime);
+            ball->draw(window);
+        }
+        connectedObjects.Draw(window);
+    }
+
     void MoveAndDraw(sf::RenderWindow& window, float fps, float elastic,bool planetMode, bool enableCollison, bool borderless) {
         if (borderless)
         {

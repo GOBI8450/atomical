@@ -19,25 +19,36 @@
 //using boost::asio::ip::tcp;
 //using boost::asio::ip::udp;
 //
-//class Client : public HandleNetworkingClient, public PhysicsSimulationLocal {
-//private :
-//    std::string Vector2iToString(const sf::Vector2i& vector) {
-//        std::ostringstream oss;  // create a string stream
-//        oss << "(" << vector.x << ", " << vector.y << ")";  // format the vector as a string
-//        return oss.str();  // return the formatted string
-//    }
-//    std::string Vector2fToString(const sf::Vector2f& vector) {
-//        std::ostringstream oss;  // create a string stream
-//        oss << "(" << vector.x << ", " << vector.y << ")";  // format the vector as a string
-//        return oss.str();  // return the formatted string
-//    }
+//class Client : public HandleNetworkingClient, public PhysicsSimulationActions, public PhysicsSimulationVisual {
 //public:
-//    Client(sf::RenderWindow& win, boost::asio::io_context& io_context,
-//        const std::string& host,
-//        unsigned short tcp_port,
-//        unsigned short udp_port) : 
-//        PhysicsSimulationLocal(win), HandleNetworkingClient(io_context, host, tcp_port, udp_port) {}
+//    Client(sf::RenderWindow& window, boost::asio::io_context& io_context,const std::string& host,unsigned short tcp_port,unsigned short udp_port) :    
+//        window(window),
+//        settings(8),
+//        objectList(lineLength),
+//        spawnStartingPoint(posXStartingPoint, posYStartingPoint),
+//        PhysicsSimulationVisual(),
+//        PhysicsSimulationActions(),
+//        HandleNetworkingClient(io_context, host, tcp_port, udp_port)
+//    {
+//        view = window.getDefaultView();  // Initialize view from window
+//        initializeCursors();
+//        loadResources();
+//        initializeUI();
+//        setupGradient();
+//    }
 //
+//    std::string Run() override {
+//        currentMousePos = window.mapPixelToCoords(sf::Mouse::getPosition(window), view);
+//        handleSimulationEvents();
+//        renderSimulation();
+//        return screen;
+//    }
+//
+//    std::vector<BaseShape> TranslateMessage(const std::string& message) override {
+//
+//    }
+//
+//private:
 //    //Local:
 //    void handleMouseClick() override {
 //        if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && mouseClickFlag == false) {
@@ -211,32 +222,6 @@
 //        }
 //    }
 //
-//    void handleMouseWheel(sf::Event event) override {
-//        if (event.type == sf::Event::MouseWheelScrolled) {
-//            if (event.mouseWheelScroll.wheel == sf::Mouse::VerticalWheel) {
-//                //sf::Vector2f beforeZoom = window.mapPixelToCoords(sf::Vector2i(event.mouseWheelScroll.x, event.mouseWheelScroll.y), view);
-//                if (event.mouseWheelScroll.delta > 0) {
-//
-//                    if (!scaleFlag) {
-//                        view.zoom(1.f / ZOOM_FACTOR);
-//                    }
-//                    mouseFlagScrollUp = true;
-//                }
-//
-//                else if (event.mouseWheelScroll.delta < 0) {
-//                    if (!scaleFlag) {
-//                        view.zoom(ZOOM_FACTOR);
-//                    }
-//                    mouseFlagScrollDown = true;
-//                }
-//
-//                //sf::Vector2f afterZoom = window.mapPixelToCoords(sf::Vector2i(event.mouseWheelScroll.x, event.mouseWheelScroll.y), view);
-//                //sf::Vector2f offset = beforeZoom - afterZoom;
-//                //view.move(offset);
-//            }
-//        }
-//    }
-//
 //    void handleScaling() override {
 //        if (scaleFlag && mouseFlagScrollUp || mouseFlagScrollDown) {
 //            if (Circle* circle = dynamic_cast<Circle*>(thisBallPointer)) {
@@ -249,12 +234,263 @@
 //        }
 //    }
 //
-//    //recive from server:
+//    #pragma region Viusals
+//    void renderSimulation() override {
+//        updateFPS();
+//        window.clear(background_color);
+//        window.setView(view);
+//
+//        MoveAndDrawObjects();
+//
+//        window.setView(window.getDefaultView());
+//        renderTexts();
+//
+//        window.display();
+//
+//        limitFrameRate();
+//    }
+//
 //    void MoveAndDrawObjects() override {
 //        objectList.MoveAndDraw(window, currentFPS, elastic, planetMode, enableCollison, borderless);
 //    }
 //
+//    void initializeUI() override {
+//        setupText();
+//        setupHeaders();
+//    }
+//
+//    void initializeCursors() override {
+//        if (!defaultCursor.loadFromSystem(sf::Cursor::Arrow) ||
+//            !handCursor.loadFromSystem(sf::Cursor::Hand)) {
+//            throw std::runtime_error("Failed to load cursors");
+//        }
+//        window.setMouseCursor(defaultCursor);
+//    }
+//
+//    void loadResources() override {
+//        if (!font.loadFromFile("visuals/font.ttf")) {
+//            throw std::runtime_error("Failed to load font");
+//        }
+//        loadTextures();
+//    }
+//
+//    void setupGradient() override {
+//        sf::Color startColor(128, 0, 128);  // purple
+//        sf::Color endColor(0, 0, 255);      // blue
+//        gradient = GenerateGradient(startColor, endColor, gradientStepMax);
+//    }
+//
+//    std::vector<sf::Color> GenerateGradient(sf::Color startColor, sf::Color endColor, int steps) override {
+//        std::vector<sf::Color> gradient;
+//        float stepR = (endColor.r - startColor.r) / static_cast<float>(steps - 1);
+//        float stepG = (endColor.g - startColor.g) / static_cast<float>(steps - 1);
+//        float stepB = (endColor.b - startColor.b) / static_cast<float>(steps - 1);
+//
+//        for (int i = 0; i < steps; ++i) {
+//            gradient.push_back(sf::Color(
+//                startColor.r + stepR * i,
+//                startColor.g + stepG * i,
+//                startColor.b + stepB * i
+//            ));
+//        }
+//        return gradient;
+//    }
+//
+//    void loadTextures() override {
+//        // Since no textures are used in the original code, this method is kept minimal
+//        // but provides a hook for future texture loading if needed
+//        try {
+//            // Currently no textures are loaded as the simulation uses basic shapes
+//            // If textures are needed in the future, they can be loaded here:
+//            /*
+//            sf::Texture texture;
+//            if (!texture.loadFromFile("path/to/texture.png")) {
+//                throw std::runtime_error("Failed to load texture");
+//            }
+//            */
+//        }
+//        catch (const std::exception& error) {
+//            std::cerr << "Texture loading error: " << error.what() << std::endl;
+//        }
+//    }
+//
+//    void updateFPS() override {
+//        frameCount++;
+//        float timeElapsed = fpsClock.getElapsedTime().asSeconds();
+//
+//        if (timeElapsed >= 1.0f) {
+//            currentFPS = frameCount / timeElapsed;
+//            frameCount = 0;
+//            fpsClock.restart();
+//        }
+//    }
+//
+//    void setupText() override {
+//        // FPS Text
+//        fpsText.setFont(font);
+//        fpsText.setCharacterSize(20);
+//        fpsText.setFillColor(sf::Color::White);
+//        fpsText.setPosition(10, 10);
+//
+//        // Balls Count Text
+//        ballsCountText.setFont(font);
+//        ballsCountText.setCharacterSize(20);
+//        ballsCountText.setFillColor(sf::Color::White);
+//        ballsCountText.setPosition(10, 40);
+//
+//        // Linking Text
+//        linkingText.setFont(font);
+//        linkingText.setString("DEACTIVATED");
+//        linkingText.setCharacterSize(20);
+//        linkingText.setFillColor(sf::Color::White);
+//        linkingText.setPosition(10, 70);
+//    }
+//
+//    void setupHeaders() override {
+//        headerText.setSize(sf::Vector2f(400.f, 100.f));
+//        headerText.setPosition(
+//            options.window_width / 2.f - headerText.getSize().x / 2.f,
+//            100.f
+//        );
+//        headerText.setFillColor(buttonColor);
+//    }
+//
+//    void renderTexts() override {
+//        std::ostringstream fpsStream;
+//        std::ostringstream ballCountStream;
+//
+//        fpsStream << "FPS: " << static_cast<int>(currentFPS);
+//        ballCountStream << "Balls Count: " << static_cast<int>(objCount);
+//
+//        fpsText.setString(fpsStream.str());
+//        ballsCountText.setString(ballCountStream.str());
+//
+//        window.draw(fpsText);
+//        window.draw(linkingText);
+//        window.draw(ballsCountText);
+//    }
+//
+//    void limitFrameRate() override {
+//        sf::Time elapsed = clock.restart();
+//        if (elapsed.asSeconds() < deltaTime) {
+//            sf::sleep(sf::seconds(deltaTime - elapsed.asSeconds()));
+//        }
+//    }
+//
+//    std::vector<BaseShape> ConvertForSending() override {
+//        return std::vector<BaseShape>();
+//    }
+//#pragma endregion
+//
+//    std::string Vector2iToString(const sf::Vector2i& vector) {
+//        std::ostringstream oss;  // create a string stream
+//        oss << "(" << vector.x << ", " << vector.y << ")";  // format the vector as a string
+//        return oss.str();  // return the formatted string
+//    }
+//
+//    std::string Vector2fToString(const sf::Vector2f& vector) {
+//        std::ostringstream oss;  // create a string stream
+//        oss << "(" << vector.x << ", " << vector.y << ")";  // format the vector as a string
+//        return oss.str();  // return the formatted string
+//    }
+//
+//    #pragma region EssantialVariables
+//    sf::VideoMode desktopSize = sf::VideoMode::getDesktopMode();
+//    int window_height = desktopSize.height;
+//    int window_width = desktopSize.width;
+//    bool fullscreen = false;
+//    float gravity = 0;
+//    double massLock = 0;
+//
+//
+//    // Window and view settings
+//    sf::RenderWindow& window;
+//    sf::View view;
+//    sf::ContextSettings settings;
+//    const float ZOOM_FACTOR = 1.5f;
+//
+//    // Cursors
+//    sf::Cursor handCursor;
+//    sf::Cursor defaultCursor;
+//
+//    std::string screen = "START";
+//
+//    bool hovering = false;
+//    bool connectingMode = false;
+//    bool planetMode = false;
+//    bool enableCollison = true;
+//    bool borderless = true;
+//
+//    // Physics and simulation parameters
+//    float lineLength = 150;
+//    ObjectsList objectList;
+//    float deltaTime = 1.0f / 60.0f;
+//    float elastic = 0.0;
+//    int objCount = 0;
+//    float radius = 50;
+//
+//    // Mouse and interaction state
+//    sf::Vector2f* previousMousePos = nullptr;
+//    sf::Vector2f currentMousePos;
+//    bool mouseClickFlag = false;
+//    bool mouseFlagScrollUp = false;
+//    bool mouseFlagScrollDown = false;
+//    int mouseScrollPower = 5;
+//    bool scaleFlag = false;
+//    bool TouchedOnce = false;
+//    float moveSpeedScreen = 15.f;
+//
+//    // Object pointers for interaction
+//    BaseShape* thisBallPointer = nullptr;
+//    BaseShape* previousBallPointer = nullptr;
+//
+//    // Visual settings
+//    sf::Color ball_color = sf::Color(238, 238, 238);
+//    sf::Color ball_color2 = sf::Color(50, 5, 11);
+//    sf::Color background_color = sf::Color(30, 30, 30);
+//    sf::Color buttonColor = sf::Color(55, 58, 64);
+//    sf::Color bb = sf::Color(44, 55, 100);
+//    sf::Color explosion = sf::Color(205, 92, 8);
+//    sf::Color outlineColor = sf::Color(255, 255, 255);
+//    sf::Color previousColor = sf::Color(0, 0, 0);
+//
+//    // Gradient settings
+//    short int gradientStep = 0;
+//    short int gradientStepMax = 400;
+//    std::vector<sf::Color> gradient;
+//
+//    // UI Elements
+//    sf::Font font;
+//    sf::Text ballsCountText;
+//    sf::Text fpsText;
+//    sf::Text linkingText;
+//
+//    // Menu elements
+//    sf::RectangleShape headerText;
+//    std::vector<std::pair<Button, bool>> settingsButtonVec;
+//
+//    // Performance tracking
+//    sf::Clock clock;
+//    sf::Clock fpsClock;
+//    int frameCount = 0;
+//    float currentFPS = 0.0f;
+//
+//    // Object templates
+//    Circle* copyObjCir;
+//    RectangleClass* copyObjRec;
+//
+//    // Spawn settings
+//    float posYStartingPoint = 200;
+//    int posXStartingPoint = radius;
+//    short int startingPointAdder = 31;
+//    sf::Vector2f spawnStartingPoint;
+//    sf::Vector2f initialVel = sf::Vector2f(4, 0);
+//#pragma endregion
+//
 //};
+//
+//
+//
 //
 //void initializeWindow(sf::RenderWindow& window, sf::View view, sf::ContextSettings settings) {
 //    window.create(

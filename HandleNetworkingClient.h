@@ -17,6 +17,7 @@
 using boost::asio::ip::tcp;
 using boost::asio::ip::udp;
 
+
 class HandleNetworkingClient {
 public:
     HandleNetworkingClient(boost::asio::io_context& io_context,
@@ -67,6 +68,19 @@ public:
             });
     }
 
+protected:
+    virtual std::vector<BaseShape> TranslateMessage(const std::string& message) {
+        // Check if the message starts with "BS" to indicate a serialized vector of BaseShape objects
+        if (message.length() > 2 && message[0] == 'B' && message[1] == 'S') {
+            return DeserializeBaseShapeVector(message.substr(2));
+        }
+        else {
+            // Handle regular string messages
+            std::cout << "Received message: " << message << std::endl;
+            return std::vector<BaseShape>();
+        }
+    }
+
 private:
     void attempt_connect() {
         if (!should_try_connect_) {
@@ -107,7 +121,6 @@ private:
             });
     }
 
-    // Add these as class members:
     bool should_try_connect_;
     boost::asio::steady_timer retry_timer_;
 
@@ -140,7 +153,8 @@ private:
                     tcp_buffer_.consume(length);
 
                     std::cout << "TCP received: " << message;
-
+                    std::vector<BaseShape> shapes = TranslateMessage(message);
+                    // Process the received shapes as needed
                     start_tcp_receive();
                 }
                 else {
@@ -148,8 +162,6 @@ private:
                 }
             });
     }
-
-    virtual std::vector<BaseShape> TranslateMessage() { return std::vector<BaseShape>();}
 
     void start_udp_receive() {
         udp_socket_.async_receive_from(
@@ -159,7 +171,8 @@ private:
                 if (!errorCode) {
                     std::string message(udp_data_, bytesRecived);
                     std::cout << "UDP received: " << message << std::endl;
-                    TranslateMessage();
+                    std::vector<BaseShape> shapes = TranslateMessage(message);
+                    // Process the received shapes as needed
                     start_udp_receive();
                 }
                 else {
@@ -168,6 +181,20 @@ private:
             });
     }
 
+    std::string SerializeBaseShapeVector(const std::vector<BaseShape>& shapes) {
+        std::ostringstream oss;
+        boost::archive::binary_oarchive oa(oss);
+        oa << shapes;
+        return "BS" + oss.str();
+    }
+
+    std::vector<BaseShape> DeserializeBaseShapeVector(const std::string& serializedData) {
+        std::istringstream iss(serializedData);
+        boost::archive::binary_iarchive ia(iss);
+        std::vector<BaseShape> shapes;
+        ia >> shapes;
+        return shapes;
+    }
 
     boost::asio::io_context& io_context_;
     tcp::socket tcp_socket_;
@@ -181,3 +208,72 @@ private:
     char udp_data_[max_length];
     std::deque<std::string> tcp_message_queue_;
 };
+
+int main() {
+    try {
+        const std::string server_ip = "127.0.0.1";  // or "localhost"
+        unsigned short tcp_port = 8080;
+        unsigned short udp_port = 8081;
+
+        std::cout << "Starting client..." << std::endl;
+        std::cout << "Attempting to connect to:" << std::endl;
+        std::cout << "Server IP: " << server_ip << std::endl;
+        std::cout << "TCP port: " << tcp_port << std::endl;
+        std::cout << "UDP port: " << udp_port << std::endl;
+
+        boost::asio::io_context io_context;
+
+        HandleNetworkingClient client(io_context, server_ip, tcp_port, udp_port);
+        client.connect();
+
+        // Start a thread to run the IO service
+        std::thread io_thread([&io_context]() {
+            io_context.run();
+            });
+
+        std::cout << "\nAvailable commands:" << std::endl;
+        std::cout << "- Type a message to send via TCP" << std::endl;
+        std::cout << "- Type 'udp:' followed by a message to send via UDP" << std::endl;
+        std::cout << "- Type 'stop' to stop connection attempts" << std::endl;
+        std::cout << "- Type 'connect' to start connection attempts" << std::endl;
+        std::cout << "- Type 'quit' to exit" << std::endl;
+
+
+        // Main loop to get user input and send messages
+        std::string input;
+        while (std::getline(std::cin, input)) {
+        
+            if (input == "quit") {
+                std::cout << "Shutting down client..." << std::endl;
+                client.stop_connecting();
+                break;
+            }
+            if (input == "stop") {
+                client.stop_connecting();
+                std::cout << "Stopped connection attempts." << std::endl;
+                continue;
+            }
+            if (input == "connect") {
+                std::cout << "Starting connection attempts..." << std::endl;
+                client.connect();
+                continue;
+            }
+
+            if (input.substr(0, 4) == "udp:") {
+                client.send_udp_message(input.substr(4));
+            }
+            else {
+                client.send_tcp_message(input);
+            }
+        }
+
+        io_context.stop();
+        io_thread.join();
+    }
+    catch (std::exception& e) {
+        std::cerr << "Fatal error: " << e.what() << std::endl;
+        return 1;
+    }
+
+    return 0;
+}
