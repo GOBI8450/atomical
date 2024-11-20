@@ -336,12 +336,13 @@ public:
 	std::string ToString() const override {
 		std::stringstream ss;
 
-		// Get BaseShape information first
+		// Call BaseShape::ToString() to include base properties
 		ss << BaseShape::ToString() << ":"
-			<< height << ":" << width << ":"
-			<< velocity.x << ":" << velocity.y; 
+			<< height << ":" << width << ":"  // Rectangle-specific properties: Height and Width
+			<< velocity.y << ":" << velocity.x;  // Rectangle-specific property: Velocity
 
 		return ss.str();
 	}
+
 };
 

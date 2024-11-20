@@ -1,0 +1,2 @@
+C:\Users\ערן\source\repos\PhysicSSimulator\x64\Release\boost_serialization-vc143-mt-x64-1_86.dll
+C:\Users\ערן\source\repos\PhysicSSimulator\Engine\x64\Release\PhysicSS.F10E262B.Up2Date

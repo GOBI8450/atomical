@@ -138,15 +138,16 @@ public:
 
 	virtual std::string ToString() const {
 		std::stringstream ss;
-		ss << GetType() << ":"
-			<< id << ":"  // ID
-			<< "rgb(" << color.r << "," << color.g << "," << color.b << "):"  // Color
-			<< mass << ":"  // Mass
+		ss << GetType() << ":"       // Shape type
+			<< id << ":"              // ID
+			<< "(" << std::to_string(color.r) << "," << std::to_string(color.g) << "," << std::to_string(color.b) << "):"  // Color
+			<< mass << ":"            // Mass
 			<< oldPosition.x << ":" << oldPosition.y << ":"  // Position
 			<< acceleration.x << ":" << acceleration.y << ":"  // Acceleration
-			<< linked;
+			<< linked;                // Linked flag
 		return ss.str();
 	}
+
 
 };
 

@@ -251,10 +251,10 @@ public:
 	std::string ToString() const override {
 		std::stringstream ss;
 
-		// Get BaseShape information first
-		ss << BaseShape::ToString() << ":" 
-			<< radius << ":"   
-			<< velocity.x << ":" << velocity.y; 
+		// Call BaseShape::ToString() to include base properties
+		ss << BaseShape::ToString() << ":"
+			<< radius << ":"          // Circle-specific property: Radius
+			<< velocity.y << ":" << velocity.x;  // Circle-specific property: Velocity
 
 		return ss.str();
 	}
