@@ -202,17 +202,17 @@ public:
 			BaseShape* obj = objVec.front();
 			sf::RectangleShape gridRect;
 			if (Circle* circle = dynamic_cast<Circle*>(obj)) {
-				gridRect = createGridVisually(sf::Vector2f(circle->GetRadius()*2, circle->GetRadius()*2), obj->GetPosition(), 3.0, sf::Color(255, 0, 0));
+				gridRect = createGridVisually(sf::Vector2f(circle->GetRadius() * 2, circle->GetRadius() * 2), obj->GetPosition(), 3.0, sf::Color(255, 0, 0));
 				gridRect.setOrigin(circle->GetRadius(), circle->GetRadius());
 			}
 			else if (RectangleClass* rectangle = dynamic_cast<RectangleClass*>(obj)) {
 				gridRect = createGridVisually(sf::Vector2f(rectangle->getSize().x, rectangle->getSize().y), obj->GetPosition(), 3.0, sf::Color(255, 0, 0));
 			}
-			window.draw(gridRect);		
+			window.draw(gridRect);
 		}
 	}
 };
- 
+
 class GridFixed :public Grid {
 private:
 	std::vector<std::vector<std::vector<BaseShape*>>> grids;
@@ -277,7 +277,7 @@ public:
 
 	//Finds if a point is landing on a specific object. for mouse detection
 	BaseShape* IsInGridRadius(sf::Vector2f pointPosf) override {
-		int gridColumn = pointPosf.x/ gridSize;
+		int gridColumn = pointPosf.x / gridSize;
 		int gridRow = pointPosf.y / gridSize;
 		auto objVec = grids[gridRow][gridColumn];
 		for (auto& obj : objVec) {
