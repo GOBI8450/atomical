@@ -11,7 +11,7 @@
 #include <random>  // For random number generation
 #include <ctime>   // For seeding with current time
 #include <boost\asio.hpp>
-#include "PhysicsSimulatotion.h"
+#include "PhysicsSimulation.h"
 #include "Options.h"
 
 class MainMenu

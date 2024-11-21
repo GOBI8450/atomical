@@ -127,23 +127,23 @@ public:
 
 	std::string Run() override {
 		currentMousePos = window.mapPixelToCoords(sf::Mouse::getPosition(window), view);
-		handleSimulationEvents();
+		handleAllEvents();
 		renderSimulation();
 		return screen;
 	}
 
 private:
-	void handleEvent(sf::Event event) override {
+	void handleEventsFromPollEvent(sf::Event event) override {
 		if (event.type == sf::Event::Closed) { window.close(); }
 		handleKeyPress(event);
 		handleMouseRelase(event);
 		handleMouseWheel(event);
 	}
 
-	void handleSimulationEvents() override {
+	void handleAllEvents() override {
 		sf::Event event;
 		while (window.pollEvent(event)) {
-			handleEvent(event);
+			handleEventsFromPollEvent(event);
 		}
 		handleMouseClick();
 		handleScaling();

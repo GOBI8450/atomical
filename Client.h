@@ -14,7 +14,6 @@
 #include "Options.h"
 #include "UI.h"
 #include "HandleNetworkingClient.h"
-#include "PhysicsSimulation_Client.h"
 
 
 using boost::asio::ip::tcp;
@@ -40,13 +39,13 @@ public:
 
     std::string Run() override {
         currentMousePos = window.mapPixelToCoords(sf::Mouse::getPosition(window), view);
-        handleSimulationEvents();
+        handleAllEvents();
         renderSimulation();
         return screen;
     }
 
     std::vector<BaseShape> TranslateMessage(const std::string& message) override {
-
+        return std::vector<BaseShape>();
     }
 
 private:
@@ -109,6 +108,23 @@ private:
         connectingMode = !connectingMode;
         linkingText.setString(connectingMode ? "ACTIVATED" : "DEACTIVATED");
         linkingText.setFillColor(connectingMode ? sf::Color::Magenta : sf::Color::White);
+    }
+
+    void handleEventsFromPollEvent(sf::Event event) override {
+        if (event.type == sf::Event::Closed) { window.close(); } // need to do that it will close the connection
+        handleKeyPress(event);
+        handleMouseRelase(event);
+        handleMouseWheel(event);
+    }
+
+    void handleAllEvents() override {
+        sf::Event event;
+        while (window.pollEvent(event)) {
+            handleEventsFromPollEvent(event);
+        }
+        handleMouseClick();
+        handleScaling();
+        handleMouseInteraction();
     }
 
 
@@ -234,6 +250,20 @@ private:
             }
         }
     }
+
+    #pragma region Convertors
+        std::string Vector2iToString(const sf::Vector2i& vector) {
+            std::ostringstream oss;  // create a string stream
+            oss << "(" << vector.x << ", " << vector.y << ")";  // format the vector as a string
+            return oss.str();  // return the formatted string
+        }
+
+        std::string Vector2fToString(const sf::Vector2f& vector) {
+            std::ostringstream oss;  // create a string stream
+            oss << "(" << vector.x << ", " << vector.y << ")";  // format the vector as a string
+            return oss.str();  // return the formatted string
+        }
+    #pragma endregion 
 
     #pragma region Viusals
     void renderSimulation() override {
@@ -383,18 +413,6 @@ private:
     }
 #pragma endregion
 
-    std::string Vector2iToString(const sf::Vector2i& vector) {
-        std::ostringstream oss;  // create a string stream
-        oss << "(" << vector.x << ", " << vector.y << ")";  // format the vector as a string
-        return oss.str();  // return the formatted string
-    }
-
-    std::string Vector2fToString(const sf::Vector2f& vector) {
-        std::ostringstream oss;  // create a string stream
-        oss << "(" << vector.x << ", " << vector.y << ")";  // format the vector as a string
-        return oss.str();  // return the formatted string
-    }
-
     #pragma region EssantialVariables
     sf::VideoMode desktopSize = sf::VideoMode::getDesktopMode();
     int window_height = desktopSize.height;
@@ -513,7 +531,7 @@ void toggleFullscreen(sf::RenderWindow& window) {
     window.setVerticalSyncEnabled(true);
 }
 
-void Run(std::string& screen, PhysicsSimulation_Client& simulation, MainMenu& mainMenu, Settings& settingsClass, sf::RenderWindow& window) {
+void Run(std::string& screen, Client& simulation, MainMenu& mainMenu, Settings& settingsClass, sf::RenderWindow& window) {
     while (window.isOpen()) {
         if (screen == "START") {
             screen = simulation.Run();
@@ -538,6 +556,7 @@ void Run(std::string& screen, PhysicsSimulation_Client& simulation, MainMenu& ma
 
 int main() {
     try {
+        //NETWORKING:
         const std::string server_ip = "127.0.0.1";  // or "localhost"
         unsigned short tcp_port = 8080;
         unsigned short udp_port = 8081;
@@ -550,7 +569,19 @@ int main() {
 
         boost::asio::io_context io_context;
 
-        HandleNetworkingClient client(io_context, server_ip, tcp_port, udp_port);
+
+        //ENGINE:
+        sf::RenderWindow window;
+        sf::ContextSettings settings;
+        settings.antialiasingLevel = 8;
+        sf::View view = window.getDefaultView();
+        initializeWindow(window, view, settings);
+
+        MainMenu mainMenu(window);
+        Settings settingsClass(window);
+        std::string screen = "START";
+
+        Client client(window,io_context, server_ip, tcp_port, udp_port);
         client.connect();
 
         // start a thread to run the IO service
@@ -565,20 +596,8 @@ int main() {
         std::cout << "- Type 'connect' to start connection attempts" << std::endl;
         std::cout << "- Type 'quit' to exit" << std::endl;
 
-        //ENGINE:
-        sf::RenderWindow window;
-        sf::ContextSettings settings;
-        settings.antialiasingLevel = 8;
-        sf::View view = window.getDefaultView();
-        initializeWindow(window, view, settings);
+        Run(screen, client, mainMenu, settingsClass, window);
 
-        PhysicsSimulation_Client simulation(window);
-        MainMenu mainMenu(window);
-        Settings settingsClass(window);
-        std::string screen = "START";
-        Run(screen, simulation, mainMenu, settingsClass, window);
-
-        //ENGINE end
 
         // Main loop to get user input and send messages
         std::string input;

@@ -25,9 +25,9 @@ public:
 
 protected:
 
-	virtual void handleEvent(sf::Event event) = 0;
+	virtual void handleEventsFromPollEvent(sf::Event event) = 0;
 
-	virtual void handleSimulationEvents() = 0;
+	virtual void handleAllEvents() = 0;
 
 	virtual void handleKeyPress(sf::Event event) = 0;
 
@@ -42,21 +42,21 @@ protected:
 	// Helper methods for the main handlers
 	virtual void toggleConnectingMode() = 0;
 
-	virtual void createConnectedObjects() = 0;
+	virtual void createConnectedObjects() {};
 
-	virtual void createPlanet() = 0;
+	virtual void createPlanet() {};
 
 	virtual void handleScaling() = 0;
 
-	virtual void scaleCircle(Circle* circle) = 0;
+	virtual void scaleCircle(Circle* circle) {};
 
-	virtual void scaleRectangle(RectangleClass* rectangle) = 0;
+	virtual void scaleRectangle(RectangleClass* rectangle) {};
 
-	virtual void handleConnecting() = 0;
+	virtual void handleConnecting() {};
 
-	virtual void createExplosionCircles() = 0;
+	virtual void createExplosionCircles() {};
 
-	virtual void createExplosionRectangles() = 0;
+	virtual void createExplosionRectangles() {};
 };
 
 //Abstract class

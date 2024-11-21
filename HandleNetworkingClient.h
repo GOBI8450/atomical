@@ -10,7 +10,6 @@
 #include "BaseShape.h"
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
-#include "PhysicsSimulatotion.h"
 #include "Options.h"
 #include "Serialization.h"
 #include "UI.h"
