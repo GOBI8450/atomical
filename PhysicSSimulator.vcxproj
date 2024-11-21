@@ -163,11 +163,12 @@ boost_asio-vc143-mt-x64-1_86.lib;%(AdditionalDependencies)</AdditionalDependenci
     <ClCompile Include="LineLink.cpp" />
     <ClCompile Include="ObjectsList.cpp" />
     <ClCompile Include="Options.cpp" />
+    <ClCompile Include="PhysicsSimulationLocal.cpp" />
     <ClCompile Include="PhysicsSimulatotion.cpp" />
     <ClCompile Include="Planet.cpp" />
     <ClCompile Include="Rectangle.cpp" />
     <ClCompile Include="Source.cpp" />
-    <ClCompile Include="Tests.cpp" />
+    <ClCompile Include="Serialization.cpp" />
     <ClCompile Include="UI.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -180,11 +181,12 @@ boost_asio-vc143-mt-x64-1_86.lib;%(AdditionalDependencies)</AdditionalDependenci
     <ClInclude Include="LineLink.h" />
     <ClInclude Include="ObjectsList.h" />
     <ClInclude Include="Options.h" />
-    <ClInclude Include="PhysicsSimulatotion.h" />
+    <ClInclude Include="PhysicsSimulation_Local.h" />
+    <ClInclude Include="PhysicsSimulation.h" />
     <ClInclude Include="Planet.h" />
     <ClInclude Include="Rectangle.h" />
     <ClInclude Include="resource.h" />
-    <ClInclude Include="Tests.h" />
+    <ClInclude Include="Serialization.h" />
     <ClInclude Include="UI.h" />
   </ItemGroup>
   <ItemGroup>

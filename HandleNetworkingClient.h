@@ -12,6 +12,7 @@
 #include <boost/archive/binary_oarchive.hpp>
 #include "PhysicsSimulatotion.h"
 #include "Options.h"
+#include "Serialization.h"
 #include "UI.h"
 
 using boost::asio::ip::tcp;
@@ -71,8 +72,12 @@ public:
 protected:
 	virtual std::vector<BaseShape> TranslateMessage(const std::string& message) {
 		// Check if the message starts with "BS" to indicate a serialized vector of BaseShape objects
-		if (message.length() > 2 && message[0] == 'B' && message[1] == 'S') {
-			return DeserializeBaseShapeVector(message.substr(2));
+		// Check if the message is a serialized vector of BaseShape objects
+		if (message.length() > 1 && message[0] == '$') {
+			std::vector<BaseShape*> shapes = Serialization::DeserializeShapes(message.substr(1));
+			std::cout << "Received " << shapes.size() << " shapes from server " << std::endl;
+			std::cout << shapes[0]->GetColorAsString();
+			// Process the shapes as needed
 		}
 		else {
 			// Handle regular string messages
@@ -179,14 +184,6 @@ private:
 					std::cout << "UDP receive failed: " << errorCode.message() << std::endl;
 				}
 			});
-	}
-
-	std::string SerializeBaseShapeVector(const std::vector<BaseShape>& shapes) {
-		
-	}
-
-	std::vector<BaseShape> DeserializeBaseShapeVector(const std::string& serializedData) {
-		
 	}
 
 	boost::asio::io_context& io_context_;

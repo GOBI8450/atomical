@@ -1,3 +1,7 @@
+//int main() { return 0; };
+
+
+
 //#pragma once
 //#include <SFML/Graphics.hpp>;
 //#include <SFML/Window.hpp>
@@ -11,7 +15,7 @@
 //#include <random>  // For random number generation
 //#include <ctime>   // For seeding with current time
 //#include <boost\asio.hpp>
-//#include "PhysicsSimulatotion.h"
+//#include "PhysicsSimulation.h"
 //#include "Options.h"
 //#include "UI.h"
 //
