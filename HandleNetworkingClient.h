@@ -68,21 +68,24 @@ public:
 			});
 	}
 
+
 protected:
-	virtual std::vector<BaseShape> TranslateMessage(const std::string& message) {
-		// Check if the message starts with "BS" to indicate a serialized vector of BaseShape objects
-		// Check if the message is a serialized vector of BaseShape objects
-		if (message.length() > 1 && message[0] == '$') {
-			std::vector<BaseShape*> shapes = Serialization::DeserializeShapes(message.substr(1));
-			std::cout << "Received " << shapes.size() << " shapes from server " << std::endl;
-			std::cout << shapes[0]->GetColorAsString();
-			// Process the shapes as needed
-		}
-		else {
-			// Handle regular string messages
-			std::cout << "Received message: " << message << std::endl;
-			return std::vector<BaseShape>();
-		}
+	virtual void TranslateMessage(const std::string& message) { std::cout << "dfsjdfhjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj"; }
+
+	void SaveMessage(const std::string& message) {
+		std::lock_guard<std::mutex> lock(storedMessagesMutex);
+		storedMessages.push_back(message);
+	}
+
+	const std::vector<std::string>& GetStoredMessages() {
+		std::lock_guard<std::mutex> lock(storedMessagesMutex);
+		return storedMessages;
+	}
+
+	// Method to clear stored messages
+	void ClearStoredMessages() {
+		std::lock_guard<std::mutex> lock(storedMessagesMutex);
+		storedMessages.clear();
 	}
 
 private:
@@ -157,7 +160,7 @@ private:
 					tcp_buffer_.consume(length);
 
 					std::cout << "TCP received: " << message;
-					std::vector<BaseShape> shapes = TranslateMessage(message);
+					TranslateMessage(message);
 					// Process the received shapes as needed
 					start_tcp_receive();
 				}
@@ -175,7 +178,7 @@ private:
 				if (!errorCode) {
 					std::string message(udp_data_, bytesRecived);
 					std::cout << "UDP received: " << message << std::endl;
-					std::vector<BaseShape> shapes = TranslateMessage(message);
+					TranslateMessage(message);
 					// Process the received shapes as needed
 					start_udp_receive();
 				}
@@ -196,6 +199,8 @@ private:
 	enum { max_length = 1024 };
 	char udp_data_[max_length];
 	std::deque<std::string> tcp_message_queue_;
+	std::vector<std::string> storedMessages;
+	mutable std::mutex storedMessagesMutex;
 };
 
 //int main() {
