@@ -77,10 +77,9 @@ public:
 	}
 
 	//Function that handles the walls collisons:
-	void handleWallCollision(sf::RenderWindow& window)
+	void handleWallCollision(int window_width, int window_height)
 	{
 		sf::Vector2f pos = GetPosition();
-		sf::Vector2u windowSize = window.getSize();
 		float energyLossFactor = 0;// If you wanna add energy loss
 		//as the origin point is set to the center of the circle the point will be always radius far away from its edges
 		if (pos.x - radius < 0)
@@ -89,10 +88,10 @@ public:
 			pos.x = radius;
 			oldPosition.x = pos.x + (pos.x - oldPosition.x) * energyLossFactor; // 0.9f Damping factor
 		}
-		else if (pos.x + radius > windowSize.x)
+		else if (pos.x + radius > window_width)
 		{
 			oldPosition.x = pos.x;
-			pos.x = windowSize.x - radius;
+			pos.x = window_width - radius;
 			oldPosition.x = pos.x + (pos.x - oldPosition.x) * energyLossFactor;
 		}
 
@@ -102,10 +101,10 @@ public:
 			pos.y = radius;
 			oldPosition.y = pos.y + (pos.y - oldPosition.y) * energyLossFactor;
 		}
-		else if (pos.y + radius > windowSize.y)
+		else if (pos.y + radius > window_height)
 		{
 			oldPosition.y = pos.y;
-			pos.y = windowSize.y - radius;
+			pos.y = window_height - radius;
 			oldPosition.y = pos.y + (pos.y - oldPosition.y) * energyLossFactor;
 		}
 

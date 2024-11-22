@@ -125,7 +125,7 @@ public:
 		setupGradient();
 	}
 
-	std::string Run() override {
+	std::string Run() {
 		currentMousePos = window.mapPixelToCoords(sf::Mouse::getPosition(window), view);
 		handleAllEvents();
 		renderSimulation();
@@ -449,7 +449,8 @@ private:
 	}
 
 	void MoveAndDrawObjects() override {
-		objectList.MoveAndDraw(window, currentFPS, elastic, planetMode, enableCollison, borderless);
+		objectList.MoveObjects(window_width, window_height, currentFPS, elastic, planetMode, enableCollison, borderless);
+		objectList.DrawObjects(window, currentFPS, planetMode);
 	}
 
 	void initializeUI() override {

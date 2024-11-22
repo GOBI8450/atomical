@@ -88,17 +88,17 @@ public:
 		connectedObjects.MakeNewLink(shape, target);
 	}
 
-	void HandleCollisionsInRange(sf::RenderWindow& window, float elastic, std::vector<std::vector<BaseShape*>> vecOfVecObj) {
+	void HandleCollisionsInRange(int window_width, int window_height, float elastic, std::vector<std::vector<BaseShape*>> vecOfVecObj) {
 		if (elastic == 0) { // Verlet integration
 			for (auto& vecObj : vecOfVecObj) {
 				for (auto& obj : vecObj) {
 					// Check if obj is a Circle
 					if (Circle* circle = dynamic_cast<Circle*>(obj)) {
-						circle->handleWallCollision(window);
+						circle->handleWallCollision( window_width,  window_height);
 					}
 					// Check if obj is a Rectangle
 					else if (RectangleClass* rectangle = dynamic_cast<RectangleClass*>(obj)) {
-						rectangle->handleWallCollision(window);
+						rectangle->handleWallCollision( window_width,  window_height);
 					}
 
 					// Get nearby objects for collision handling
@@ -145,11 +145,11 @@ public:
 				for (auto& obj : vecObj) {
 					// Check if obj is a Circle
 					if (Circle* circle = dynamic_cast<Circle*>(obj)) {
-						circle->handleWallCollision(window);
+						circle->handleWallCollision(window_width, window_height);
 					}
 					// Check if obj is a Rectangle
 					else if (RectangleClass* rectangle = dynamic_cast<RectangleClass*>(obj)) {
-						rectangle->handleWallCollision(window);
+						rectangle->handleWallCollision(window_width, window_height);
 					}
 
 					// Get nearby objects for collision handling
@@ -180,16 +180,16 @@ public:
 		}
 	}
 
-	void HandleAllCollisions(sf::RenderWindow& window, float elastic) {
+	void HandleAllCollisions(int window_width, int window_height, float elastic) {
 		if (elastic == 0) { // Verlet integration
 			for (auto& obj : objList) {
 				// Check if obj is a Circle
 				if (Circle* circle = dynamic_cast<Circle*>(obj)) {
-					circle->handleWallCollision(window);
+					circle->handleWallCollision( window_width,  window_height);
 				}
 				// Check if obj is a Rectangle
 				else if (RectangleClass* rectangle = dynamic_cast<RectangleClass*>(obj)) {
-					rectangle->handleWallCollision(window);
+					rectangle->handleWallCollision(window_width, window_height);
 				}
 
 				// Get nearby objects for collision handling
@@ -232,11 +232,11 @@ public:
 			for (auto& obj : objList) {
 				// Check if obj is a Circle
 				if (Circle* circle = dynamic_cast<Circle*>(obj)) {
-					circle->handleWallCollision(window);
+					circle->handleWallCollision(window_width, window_height);
 				}
 				// Check if obj is a Rectangle
 				else if (RectangleClass* rectangle = dynamic_cast<RectangleClass*>(obj)) {
-					rectangle->handleWallCollision(window);
+					rectangle->handleWallCollision(window_width, window_height);
 				}
 
 				// Get nearby objects for collision handling
@@ -280,6 +280,16 @@ public:
 		delete obj;
 	}
 
+	BaseShape* FindByID(std::string id) { //TODO: better serch???
+		for (auto obj:objList )
+		{
+			if (obj->GetIDStr()==id)
+			{
+				return obj;
+			}
+		}
+	}
+
 	std::vector<BaseShape> ConvertForSending() {
 		std::vector<BaseShape> objectsVec_NON_POINTER;
 		for (auto& obj : objList)
@@ -289,16 +299,27 @@ public:
 		return objectsVec_NON_POINTER;
 	}
 
-	void DrawObjVec(sf::RenderWindow& window, float fps) {
+	void DrawObjects(sf::RenderWindow& window, float fps,bool planetMode) {
 		float deltaTime = 1 / fps;
-		for (auto& ball : objList) {
-			ball->updatePositionVerlet(deltaTime);
-			ball->draw(window);
-		}
 		connectedObjects.Draw(window);
+		//grid->DrawGrids(window);
+		if (planetMode)
+		{
+			for (auto& ball : objList) {
+				ball->updatePositionEuler(deltaTime);
+				ball->draw(window);
+			}
+		}
+		else
+		{
+			for (auto& ball : objList) {
+				ball->updatePositionVerlet(deltaTime);
+				ball->draw(window);
+			}
+		}
 	}
 
-	void MoveAndDraw(sf::RenderWindow& window, float fps, float elastic, bool planetMode, bool enableCollison, bool borderless) {
+	void MoveObjects(int window_width,int window_height, float fps, float elastic, bool planetMode, bool enableCollison, bool borderless) {
 		if (borderless)
 		{
 			grid = new GridUnorderd();
@@ -320,7 +341,7 @@ public:
 		float deltaTime = 1 / fps; // Calculate deltaTime for movement
 		if (enableCollison)
 		{
-			HandleAllCollisions(window, elastic);
+			HandleAllCollisions(window_width, window_height, elastic);
 		}
 		for (auto& planet : planetList)
 		{
@@ -331,20 +352,16 @@ public:
 				}
 			}
 		}
-		connectedObjects.Draw(window);
-		//grid->DrawGrids(window);
 		if (planetMode)
 		{
 			for (auto& ball : objList) {
 				ball->updatePositionEuler(deltaTime);
-				ball->draw(window);
 			}
 		}
 		else
 		{
 			for (auto& ball : objList) {
 				ball->updatePositionVerlet(deltaTime);
-				ball->draw(window);
 			}
 		}
 	}

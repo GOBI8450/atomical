@@ -25,28 +25,28 @@ public:
 
 protected:
 
-	virtual void handleEventsFromPollEvent(sf::Event event) = 0;
+	virtual void handleEventsFromPollEvent(sf::Event event) {};
 
-	virtual void handleAllEvents() = 0;
+	virtual void handleAllEvents() {};
 
-	virtual void handleKeyPress(sf::Event event) = 0;
+	virtual void handleKeyPress(sf::Event event) {};
 
-	virtual void handleMouseClick() = 0;
+	virtual void handleMouseClick() {};
 
-	virtual void handleMouseRelase(sf::Event event) = 0;
+	virtual void handleMouseRelase(sf::Event event) {};
 
-	virtual void handleMouseInteraction() = 0;
+	virtual void handleMouseInteraction() {};
 
-	virtual void handleMouseWheel(sf::Event event) = 0;
+	virtual void handleMouseWheel(sf::Event event) {};
 
 	// Helper methods for the main handlers
-	virtual void toggleConnectingMode() = 0;
+	virtual void toggleConnectingMode() {};
 
 	virtual void createConnectedObjects() {};
 
 	virtual void createPlanet() {};
 
-	virtual void handleScaling() = 0;
+	virtual void handleScaling() {};
 
 	virtual void scaleCircle(Circle* circle) {};
 
@@ -71,8 +71,6 @@ public:
 	virtual void initializeUI() = 0;
 
 	virtual void setupGradient() = 0;
-
-	virtual std::string Run() = 0;
 
 protected:
 	virtual void renderSimulation() = 0;
