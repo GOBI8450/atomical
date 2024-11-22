@@ -60,7 +60,7 @@ public:
 			udp_endpoint_,
 			[this, message](const boost::system::error_code& ec, std::size_t /*bytes_sent*/) {
 				if (!ec) {
-					std::cout << "UDP message sent: " << message << std::endl;
+					//std::cout << "UDP message sent: " << message << std::endl;
 				}
 				else {
 					std::cout << "UDP send failed: " << ec.message() << std::endl;
@@ -70,7 +70,7 @@ public:
 
 
 protected:
-	virtual void TranslateMessage(const std::string& message) { std::cout << "dfsjdfhjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj"; }
+	virtual void TranslateMessage(const std::string& message) {}
 
 	void SaveMessage(const std::string& message) {
 		std::lock_guard<std::mutex> lock(storedMessagesMutex);
@@ -100,12 +100,12 @@ private:
 			tcp_socket_.close();
 		}
 
-		std::cout << "Attempting to connect to server..." << std::endl;
+		std::cout << "\033[31m" << "Attempting to connect to server..." << std::endl; // red because it is cool ngl
 		tcp_socket_.async_connect(
 			tcp_endpoint_,
 			[this](const boost::system::error_code& ec) {
 				if (!ec) {
-					std::cout << "Connected to TCP server!" << std::endl;
+					std::cout << "\033[0m" << "Connected to TCP server!" << std::endl;
 					start_tcp_receive();
 					start_udp_receive();
 				}
@@ -159,7 +159,7 @@ private:
 						boost::asio::buffers_begin(tcp_buffer_.data()) + length);
 					tcp_buffer_.consume(length);
 
-					std::cout << "TCP received: " << message;
+					/*std::cout << "TCP received: " << message <<"\n";*/
 					TranslateMessage(message);
 					// Process the received shapes as needed
 					start_tcp_receive();
@@ -177,7 +177,7 @@ private:
 			[this](const boost::system::error_code& errorCode, std::size_t bytesRecived) {
 				if (!errorCode) {
 					std::string message(udp_data_, bytesRecived);
-					std::cout << "UDP received: " << message << std::endl;
+					/*std::cout << "UDP received: " << message << std::endl;*/
 					TranslateMessage(message);
 					// Process the received shapes as needed
 					start_udp_receive();

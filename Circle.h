@@ -110,6 +110,7 @@ public:
 
 		setPosition(pos);
 	}
+
 	double DistanceOnly(Circle* otherShape) {
 		sf::Vector2f pos = GetPosition();       // Position of this shape
 		sf::Vector2f posOther = otherShape->GetPosition(); // Position of the other shape
@@ -120,6 +121,14 @@ public:
 		return std::sqrt(std::pow((y2 - y1), 2) + std::pow((x2 - x1), 2)); // Return distance
 	}
 
+	double DistanceToPoint(sf::Vector2f posOther) {
+		sf::Vector2f pos = GetPosition();       // Position of this shape
+		double x1 = pos.x;
+		double y1 = pos.y;
+		double x2 = posOther.x;
+		double y2 = posOther.y;
+		return std::sqrt(std::pow((y2 - y1), 2) + std::pow((x2 - x1), 2)); // Return distance
+	}
 
 	//Checks if there is any collision between two balls
 	bool IsCollision(Circle* otherCir) {
@@ -128,6 +137,19 @@ public:
 			return true;
 		}
 		return false;
+	}
+
+	bool IsInRadius(sf::Vector2f pos) {
+		// Get the actual position of the circle (considering its center)
+		sf::Vector2f circleCenter = GetPosition();
+
+		// Calculate distance between point and circle center
+		float dx = pos.x - circleCenter.x;
+		float dy = pos.y - circleCenter.y;
+		float distanceSquared = dx * dx + dy * dy;
+
+		// Check if point is within circle
+		return distanceSquared <= (radius * radius);
 	}
 
 	//The collision handeling is done by seperating the two circles with a vector between the two of them, and the overlap of them. the speed that will be created is done by verlet integretion
@@ -208,8 +230,6 @@ public:
 		setOrigin(sf::Vector2f(radius, radius));
 	}
 
-
-
 	// Set shape color
 	void setColor(sf::Color newColor) override
 	{
@@ -233,15 +253,20 @@ public:
 		return radius;
 	}
 
-	sf::Vector2f GetPosition() override {
+	sf::Vector2f GetPosition() const override {
 		return getPosition();
+	}
+
+	std::string GetPositionStr() const override {
+		std::stringstream ss;
+		ss << "X=" << GetPosition().x << "Y=" << GetPosition().y;
+		return ss.str();
 	}
 
 	void SetOutline(sf::Color color, float thickness) override {
 		setOutlineThickness(thickness);
 		setOutlineColor(color);
 	}
-
 
 	std::string GetType() const override {
 		return "Circle";

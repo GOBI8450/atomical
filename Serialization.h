@@ -114,15 +114,16 @@ public:
                 int id = std::stoi(shapeData[currentIndex++]);
                 sf::Color color = ExtractColor(shapeData[currentIndex++]);
                 double mass = std::stod(shapeData[currentIndex++]);
-                sf::Vector2f oldPos(std::stof(shapeData[currentIndex++]), std::stof(shapeData[currentIndex++]));
+                sf::Vector2f pos(std::stof(shapeData[currentIndex++]), std::stof(shapeData[currentIndex++]));
                 sf::Vector2f accel(std::stof(shapeData[currentIndex++]), std::stof(shapeData[currentIndex++]));
                 int linked = std::stoi(shapeData[currentIndex++]);
 
                 shape->SetMass(mass);
-                shape->SetOldPosition(oldPos);
+                shape->SetPosition(pos);
                 shape->SetAcceleration(accel);
                 shape->SetLinked(linked);
                 shape->setColor(color);
+                shape->SetID(id);
 
                 if (Circle* circle = dynamic_cast<Circle*>(shape)) {
                     float radius = std::stof(shapeData[currentIndex++]);
@@ -147,8 +148,6 @@ public:
 
         return shapes;
     }
-
-
 };
 
 //int main() {

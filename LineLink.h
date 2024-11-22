@@ -129,8 +129,8 @@ public:
 	}
 
 	void Draw(sf::RenderWindow& window) {
-		ApplyAllLinks();
-
+		//ApplyAllLinks();
+		//TODO: now linking wont work for singleplayer quiqk fix it
 		sf::VertexArray lines(sf::Lines);
 		for (const auto& pair : connections) {
 			BaseShape* obj1 = pair.first;

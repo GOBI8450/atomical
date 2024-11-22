@@ -51,9 +51,9 @@ public:
 		sf::Vector2f position(pos);
 		int randomRadius = radiusRange(rnd);
 		int mass = randomRadius * 3;//no real meaning for the multiply
+		objCount += 1;
 		BaseShape* ball = new Circle(randomRadius, color, position, gravity, mass, initialVel, objCount);
 		objList.push_back(ball); // Pushing back the BaseShape* into the vector
-		objCount += 1;
 		return ball;
 		// std::cout << "Creating ball at position: (" << position.x << ", " << position.y << ")\n";
 	}
@@ -280,7 +280,7 @@ public:
 		delete obj;
 	}
 
-	BaseShape* FindByID(std::string id) { //TODO: better serch???
+	BaseShape* FindByIDStr(std::string id) { //TODO: better serch???
 		for (auto obj:objList )
 		{
 			if (obj->GetIDStr()==id)
@@ -288,8 +288,38 @@ public:
 				return obj;
 			}
 		}
+		return nullptr;
 	}
 
+	BaseShape* FindByID(int id) { //TODO: better serch???
+		for (auto obj : objList)
+		{
+			if (obj->GetID() == id)
+			{
+				return obj;
+			}
+		}
+		return nullptr;
+	}
+
+	// In ObjectsList class:
+	int checkIfPointInObjectArea(sf::Vector2f pos) {
+		for (auto& obj : objList) {
+			if (Circle* circle = dynamic_cast<Circle*>(obj)) {
+				if (circle->IsInRadius(pos)) {
+					return obj->GetID();
+				}
+			}
+			else if (RectangleClass* rectangle = dynamic_cast<RectangleClass*>(obj)) {
+				sf::FloatRect bounds = rectangle->GetGlobalBounds();
+
+				if (bounds.contains(pos)) {
+					return obj->GetID();
+				}
+			}
+		}
+		return -1;
+	}
 	std::vector<BaseShape> ConvertForSending() {
 		std::vector<BaseShape> objectsVec_NON_POINTER;
 		for (auto& obj : objList)
@@ -301,6 +331,55 @@ public:
 
 	void DrawObjects(sf::RenderWindow& window, float fps,bool planetMode) {
 		float deltaTime = 1 / fps;
+		connectedObjects.Draw(window);
+		//grid->DrawGrids(window);
+		if (planetMode)
+		{
+			for (auto& ball : objList) {
+				ball->draw(window);
+			}
+		}
+		else
+		{
+			for (auto& ball : objList) {
+				ball->draw(window);
+			}
+		}
+	}
+
+	void MoveAndDraw(sf::RenderWindow& window, float fps, float elastic, bool planetMode, bool enableCollison, bool borderless) {
+		if (borderless)
+		{
+			grid = new GridUnorderd();
+		}
+		else
+		{
+			grid = new GridFixed();
+		}
+
+		grid->clear(); // Clear the grid
+
+		for (auto& ball : objList) {
+			grid->InsertObj(ball); // Inserting BaseShape* objects
+		}
+
+		if (fps <= 0) {
+			fps = 60;
+		}
+		float deltaTime = 1 / fps; // Calculate deltaTime for movement
+		if (enableCollison)
+		{
+			HandleAllCollisions(window.getSize().x, window.getSize().y, elastic);
+		}
+		for (auto& planet : planetList)
+		{
+			for (auto& ball : objList) {
+				if (typeid(*ball) != typeid(*planet))
+				{
+					planet->Gravitate(ball);
+				}
+			}
+		}
 		connectedObjects.Draw(window);
 		//grid->DrawGrids(window);
 		if (planetMode)
@@ -352,6 +431,7 @@ public:
 				}
 			}
 		}
+		connectedObjects.ApplyAllLinks();
 		if (planetMode)
 		{
 			for (auto& ball : objList) {

@@ -70,14 +70,14 @@ public:
 
 	virtual void initializeUI() = 0;
 
-	virtual void setupGradient() = 0;
+	virtual void setupGradient() {};
 
 protected:
 	virtual void renderSimulation() = 0;
 
 	virtual void MoveAndDrawObjects() = 0;
 
-	virtual std::vector<sf::Color> GenerateGradient(sf::Color startColor, sf::Color endColor, int steps) = 0;
+	virtual std::vector<sf::Color> GenerateGradient(sf::Color startColor, sf::Color endColor, int steps) { return std::vector<sf::Color>(); };
 
 	virtual void loadTextures() = 0;
 

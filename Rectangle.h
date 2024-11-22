@@ -87,10 +87,6 @@ public:
 		window.draw(*this);
 	}
 
-
-
-
-
 	void handleWallCollision(int window_width, int window_height) {
 		sf::Vector2f pos = GetPosition();
 		float energyLossFactor = 0;// If you wanna add energy loss
@@ -123,7 +119,6 @@ public:
 
 		setPosition(pos);
 	}
-
 
 
 	double FindOverlap(RectangleClass* otherRec) {
@@ -324,8 +319,18 @@ public:
 		setOutlineColor(color);
 	}
 
-	sf::Vector2f GetPosition() override {
+	sf::Vector2f GetPosition() const override {
 		return getPosition();
+	}
+
+	std::string GetPositionStr() const override {
+		std::stringstream ss;
+		ss << "X=" << GetPosition().x << "Y=" << GetPosition().y;
+		return ss.str();
+	}
+
+	sf::FloatRect GetGlobalBounds() {
+		return getGlobalBounds();
 	}
 
 	std::string GetType() const override {

@@ -17,6 +17,8 @@ protected:
 	int id;
 
 public:
+	static int objectCount;
+
 	BaseShape() // must have deffult constructor for networking
 		: oldPosition(0.f, 0.f),
 		acceleration(0.f, 0.f),
@@ -34,8 +36,9 @@ public:
 		: color(color), gravity(gravity), mass(mass)
 	{
 		linked = -1;
-		id = objCount;
 		acceleration = sf::Vector2f(0, gravity); //(x axis, y axis)
+		objectCount=objCount;
+		id = objectCount;
 	}
 	// Copy constructor
 	BaseShape(const BaseShape& other)
@@ -48,7 +51,7 @@ public:
 		linked(other.linked)
 	{}
 
-	virtual ~BaseShape() {}
+	virtual ~BaseShape() { objectCount--; }
 
 
 	//Updates the position following varlet integration. meaning we calculate the next position based on the previos one and with time
@@ -64,6 +67,8 @@ public:
 
 	//Set the mass of the circle
 	void SetMass(double newMass) { mass = newMass; }
+
+	void SetID(int newID) { id = newID; }
 
 	//Get the mass of the circle. if I will use it on your mother I will get an out of bounderies error!
 	double GetMass() { return mass; }
@@ -90,7 +95,9 @@ public:
 		return std::sqrt(std::pow((y2 - y1), 2) + std::pow((x2 - x1), 2)); // Return distance
 	}
 
-	virtual sf::Vector2f GetPosition() { return sf::Vector2f(0, 0); }
+	virtual sf::Vector2f GetPosition() const { return sf::Vector2f(-1, -1); }
+
+	virtual std::string GetPositionStr() const { return ""; }
 
 	virtual void SetPosition(sf::Vector2f newPos) {}
 
@@ -136,13 +143,18 @@ public:
 		return "BaseShape";
 	}
 
-	virtual std::string ToString() const {
+	virtual void gdetGlobalBounds() {
+		return;
+	}
+
+	virtual std::string ToString() const{
 		std::stringstream ss;
+		sf::Vector2f pos = GetPosition();
 		ss << GetType() << ":"       // Shape type
 			<< id << ":"              // ID
 			<< "(" << std::to_string(color.r) << "," << std::to_string(color.g) << "," << std::to_string(color.b) << "):"  // Color
 			<< mass << ":"            // Mass
-			<< oldPosition.x << ":" << oldPosition.y << ":"  // Position
+			<< pos.y << ":" << pos.x << ":"  // Position
 			<< acceleration.x << ":" << acceleration.y << ":"  // Acceleration
 			<< linked;                // Linked flag
 		return ss.str();
