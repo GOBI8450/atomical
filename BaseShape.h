@@ -159,7 +159,5 @@ public:
 			<< linked;                // Linked flag
 		return ss.str();
 	}
-
-
 };
 
