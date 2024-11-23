@@ -16,6 +16,7 @@
 //#include "Options.h"
 //#include "UI.h"
 //
+//int BaseShape::objectCount = 0;
 //
 //void initializeWindow(sf::RenderWindow& window, sf::View view, sf::ContextSettings settings) {
 //    window.create(

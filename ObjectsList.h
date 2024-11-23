@@ -44,7 +44,7 @@ public:
 	}
 
 	BaseShape* CreateNewCircle(float gravity, sf::Color color, sf::Vector2f pos, sf::Vector2f initialVel) {
-		std::uniform_int_distribution<int> radiusRange(30, 30);
+		std::uniform_int_distribution<int> radiusRange(5, 5);
 		std::uniform_int_distribution<int> rndXRange(300, 500);  // Replace 920 with actual window width
 		// std::uniform_int_distribution<int> rndYRange(50, 1280 - 50); // Replace 1280 with actual window height
 

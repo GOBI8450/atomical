@@ -60,63 +60,63 @@ public:
 private:
 	//Local:
 	void handleMouseClick() override {
-    if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && !mouseClickFlag) {
-        thisObjID = objectList.checkIfPointInObjectArea(currentMousePos);
-        thisBallPointer = objectList.FindByID(thisObjID);
-        
-        // Store the previous object before checking for a new one
-        if (previousBallID == -1) {
-            previousBallID = thisObjID;
-        }
-        
-        if (thisObjID != -1) {
-            mouseClickFlag = true; // Set flag if circle found
-			TouchedOnce = true;
+		if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && !mouseClickFlag) {
+			thisObjID = objectList.checkIfPointInObjectArea(currentMousePos);
+			thisBallPointer = objectList.FindByID(thisObjID);
 
-            window.setMouseCursor(handCursor);
-            thisBallPointer->SetOutline(outlineColor, 5);
-            // Store the current color
-            previousColor = thisBallPointer->GetColor();
-            // Darken the color
-            sf::Color currentColor = previousColor;
-            currentColor.r = std::max(0, currentColor.r - 15);
-            currentColor.g = std::max(0, currentColor.g - 15);
-            currentColor.b = std::max(0, currentColor.b - 15);
-            thisBallPointer->setColor(currentColor);
-        }
-    }
-}
+			// Store the previous object before checking for a new one
+			if (previousBallID == -1) {
+				previousBallID = thisObjID;
+			}
 
-void handleMouseRelase(sf::Event event) override {
-    if (event.type == sf::Event::MouseButtonReleased) {
-        int releasedObjID = objectList.checkIfPointInObjectArea(currentMousePos);
-        
-        // Only reset visual state if we're releasing the same object we initially clicked
-        if (releasedObjID == thisObjID && thisObjID != -1) {
-            window.setMouseCursor(defaultCursor);
-            thisBallPointer->setColor(previousColor);
-            thisBallPointer->SetOutline(outlineColor, 0);
-        }
-        
-        mouseClickFlag = false;
-        scaleFlag = false;
-        TouchedOnce = false;
-    }
-}
+			if (thisObjID != -1) {
+				mouseClickFlag = true; // Set flag if circle found
+				TouchedOnce = true;
 
-void handleMouseInteraction() override {
-    if (mouseClickFlag && thisBallPointer != nullptr) {
-        // Set position of the found ball
-        send_udp_message("NEWP^" + thisBallPointer->GetIDStr() + "#" + Vector2fToString(currentMousePos));
-        
-        // Handle linking objects if in connecting mode
-        if (connectingMode && thisObjID != previousBallID) {
-            send_udp_message("LINK&" + objectList.FindByID(previousBallID)->GetIDStr() + "&" + objectList.FindByID(thisObjID)->GetIDStr());
-        }
-        
-        handleScaling();
-    }
-}
+				window.setMouseCursor(handCursor);
+				thisBallPointer->SetOutline(outlineColor, 5);
+				// Store the current color
+				previousColor = thisBallPointer->GetColor();
+				// Darken the color
+				sf::Color currentColor = previousColor;
+				currentColor.r = std::max(0, currentColor.r - 15);
+				currentColor.g = std::max(0, currentColor.g - 15);
+				currentColor.b = std::max(0, currentColor.b - 15);
+				thisBallPointer->setColor(currentColor);
+			}
+		}
+	}
+
+	void handleMouseRelase(sf::Event event) override {
+		if (event.type == sf::Event::MouseButtonReleased) {
+			int releasedObjID = objectList.checkIfPointInObjectArea(currentMousePos);
+
+			// Only reset visual state if we're releasing the same object we initially clicked
+			if (releasedObjID == thisObjID && thisObjID != -1) {
+				window.setMouseCursor(defaultCursor);
+				thisBallPointer->setColor(previousColor);
+				thisBallPointer->SetOutline(outlineColor, 0);
+			}
+
+			mouseClickFlag = false;
+			scaleFlag = false;
+			TouchedOnce = false;
+		}
+	}
+
+	void handleMouseInteraction() override {
+		if (mouseClickFlag && thisBallPointer != nullptr) {
+			// Set position of the found ball
+			send_udp_message("NEWP^" + thisBallPointer->GetIDStr() + "#" + Vector2fToString(currentMousePos));
+
+			// Handle linking objects if in connecting mode
+			if (connectingMode && thisObjID != previousBallID) {
+				send_udp_message("LINK&" + objectList.FindByID(previousBallID)->GetIDStr() + "&" + objectList.FindByID(thisObjID)->GetIDStr());
+			}
+
+			handleScaling();
+		}
+	}
 
 	void handleMouseWheel(sf::Event event) override {
 		if (event.type == sf::Event::MouseWheelScrolled) {
@@ -127,14 +127,14 @@ void handleMouseInteraction() override {
 					if (!scaleFlag) {
 						view.zoom(1.f / ZOOM_FACTOR);
 					}
-					mouseFlagScrollUp = true;
+					mouseFlagScroll = 1;
 				}
 
 				else if (event.mouseWheelScroll.delta < 0) {
 					if (!scaleFlag) {
 						view.zoom(ZOOM_FACTOR);
 					}
-					mouseFlagScrollDown = true;
+					mouseFlagScroll = -1;
 				}
 
 				//sf::Vector2f afterZoom = window.mapPixelToCoords(sf::Vector2i(event.mouseWheelScroll.x, event.mouseWheelScroll.y), view);
@@ -205,7 +205,7 @@ void handleMouseInteraction() override {
 
 			}
 
-			#pragma region Local Keys With Sending:
+#pragma region Local Keys With Sending:
 			if (event.key.code == sf::Keyboard::C) {
 				//send_tcp_message("LINK->MODE");
 				if (!connectingMode)
@@ -254,14 +254,15 @@ void handleMouseInteraction() override {
 	}
 
 	void handleScaling() override {
-		if (scaleFlag && mouseFlagScrollUp || mouseFlagScrollDown) {
+		if (scaleFlag && (mouseFlagScroll == 1 || mouseFlagScroll == -1)) {
 			if (Circle* circle = dynamic_cast<Circle*>(thisBallPointer)) {
-				send_udp_message("SCALE:CIR@" + circle->GetIDStr());
+				send_udp_message("SCALE@CIR@" + circle->GetIDStr() + "@" + std::to_string(mouseScrollPower) + "@" + std::to_string(mouseFlagScroll));
 			}
 			else if (RectangleClass* rectangle = dynamic_cast<RectangleClass*>(thisBallPointer))
 			{
-				send_udp_message("SCALE:REC@" + rectangle->GetIDStr());
+				send_udp_message("SCALE@REC@" + rectangle->GetIDStr() + "@" + std::to_string(mouseScrollPower) +"@" + std::to_string(mouseFlagScroll));
 			}
+			mouseFlagScroll = 0;
 		}
 	}
 
@@ -447,8 +448,7 @@ void handleMouseInteraction() override {
 	// Mouse and interaction state
 	sf::Vector2f currentMousePos;
 	bool mouseClickFlag = false;
-	bool mouseFlagScrollUp = false;
-	bool mouseFlagScrollDown = false;
+	int mouseFlagScroll = 0;
 	int mouseScrollPower = 5;
 	bool scaleFlag = false;
 	bool TouchedOnce = false;
@@ -461,7 +461,7 @@ void handleMouseInteraction() override {
 
 	// Visual settings
 
-	sf::Color background_color = sf::Color(30, 30, 30);		
+	sf::Color background_color = sf::Color(30, 30, 30);
 	sf::Color buttonColor = sf::Color(55, 58, 64);
 	sf::Color outlineColor = sf::Color(255, 255, 255);
 	sf::Color previousColor = sf::Color(0, 0, 0);

@@ -42,7 +42,7 @@ protected:
 	bool hovering = false;
 	bool connectingMode = false;
 	bool planetMode = false;
-	bool enableCollison = true;
+	bool enableCollison = false;
 	bool borderless = true;
 
 	// Physics and simulation parameters
@@ -372,7 +372,7 @@ private:
 	}
 
 	void handleScaling() override {
-		if (scaleFlag && mouseFlagScrollUp || mouseFlagScrollDown) {
+		if (scaleFlag && (mouseFlagScrollUp || mouseFlagScrollDown)) {
 			if (Circle* circle = dynamic_cast<Circle*>(thisBallPointer)) {
 				scaleCircle(circle);
 			}
