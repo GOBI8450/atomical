@@ -44,7 +44,7 @@ public:
 	}
 
 	BaseShape* CreateNewCircle(float gravity, sf::Color color, sf::Vector2f pos, sf::Vector2f initialVel) {
-		std::uniform_int_distribution<int> radiusRange(5, 5);
+		std::uniform_int_distribution<int> radiusRange(20, 20);
 		std::uniform_int_distribution<int> rndXRange(300, 500);  // Replace 920 with actual window width
 		// std::uniform_int_distribution<int> rndYRange(50, 1280 - 50); // Replace 1280 with actual window height
 
@@ -84,8 +84,14 @@ public:
 		// std::cout << "Creating ball at position: (" << position.x << ", " << position.y << ")\n";
 	}
 
-	void connectObjects(BaseShape* shape, BaseShape* target) {
-		connectedObjects.MakeNewLink(shape, target);
+	void connectObjects(BaseShape* shape, BaseShape* target, int type) {
+		connectedObjects.MakeNewLink(shape, target, type);
+	} //TODO : Use this because it is more OOP way
+
+	BaseShape* createNewLinkedCircle(BaseShape* target, int type,float gravity, sf::Color color, sf::Vector2f pos, sf::Vector2f initialVel) {
+		CreateNewCircle(gravity,color,pos,initialVel);
+		connectedObjects.MakeNewLink(objList[objCount-1], target, type);
+		return objList[objCount - 1];
 	}
 
 	void HandleCollisionsInRange(int window_width, int window_height, float elastic, std::vector<std::vector<BaseShape*>> vecOfVecObj) {
@@ -347,6 +353,79 @@ public:
 		}
 	}
 
+	void MoveWhenFreeze(int window_width, int window_height, float fps, bool borderless) {
+		if (borderless)
+		{
+			grid = new GridUnorderd();
+		}
+		else
+		{
+			grid = new GridFixed();
+		}
+
+		grid->clear(); // Clear the grid
+
+		for (auto& ball : objList) {
+			grid->InsertObj(ball); // Inserting BaseShape* objects
+			ball->SetOldPosition(ball->GetPosition());
+		}
+
+		if (fps <= 0) {
+			fps = 60;
+		}
+		float deltaTime = 1 / fps; // Calculate deltaTime for movement
+		connectedObjects.ApplyAllLinks();
+
+	}
+
+	void MoveObjects(int window_width,int window_height, float fps, float elastic, bool planetMode, bool enableCollison, bool borderless) {
+		if (borderless)
+		{
+			grid = new GridUnorderd();
+		}
+		else
+		{
+			grid = new GridFixed();
+		}
+
+		grid->clear(); // Clear the grid
+
+		for (auto& ball : objList) {
+			grid->InsertObj(ball); // Inserting BaseShape* objects
+		}
+
+		if (fps <= 0) {
+			fps = 60;
+		}
+		float deltaTime = 1 / fps; // Calculate deltaTime for movement
+		if (enableCollison)
+		{
+			HandleAllCollisions(window_width, window_height, elastic);
+		}
+		for (auto& planet : planetList)
+		{
+			for (auto& ball : objList) {
+				if (typeid(*ball) != typeid(*planet))
+				{
+					planet->Gravitate(ball);
+				}
+			}
+		}
+		connectedObjects.ApplyAllLinks();
+		if (planetMode)
+		{
+			for (auto& ball : objList) {
+				ball->updatePositionEuler(deltaTime);
+			}
+		}
+		else
+		{
+			for (auto& ball : objList) {
+				ball->updatePositionVerlet(deltaTime);
+			}
+		}
+	}
+
 	void MoveAndDraw(sf::RenderWindow& window, float fps, float elastic, bool planetMode, bool enableCollison, bool borderless) {
 		if (borderless)
 		{
@@ -394,54 +473,6 @@ public:
 			for (auto& ball : objList) {
 				ball->updatePositionVerlet(deltaTime);
 				ball->draw(window);
-			}
-		}
-	}
-
-	void MoveObjects(int window_width,int window_height, float fps, float elastic, bool planetMode, bool enableCollison, bool borderless) {
-		if (borderless)
-		{
-			grid = new GridUnorderd();
-		}
-		else
-		{
-			grid = new GridFixed();
-		}
-
-		grid->clear(); // Clear the grid
-
-		for (auto& ball : objList) {
-			grid->InsertObj(ball); // Inserting BaseShape* objects
-		}
-
-		if (fps <= 0) {
-			fps = 60;
-		}
-		float deltaTime = 1 / fps; // Calculate deltaTime for movement
-		if (enableCollison)
-		{
-			HandleAllCollisions(window_width, window_height, elastic);
-		}
-		for (auto& planet : planetList)
-		{
-			for (auto& ball : objList) {
-				if (typeid(*ball) != typeid(*planet))
-				{
-					planet->Gravitate(ball);
-				}
-			}
-		}
-		connectedObjects.ApplyAllLinks();
-		if (planetMode)
-		{
-			for (auto& ball : objList) {
-				ball->updatePositionEuler(deltaTime);
-			}
-		}
-		else
-		{
-			for (auto& ball : objList) {
-				ball->updatePositionVerlet(deltaTime);
 			}
 		}
 	}

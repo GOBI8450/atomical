@@ -23,7 +23,7 @@ protected:
 	int window_height = desktopSize.height;
 	int window_width = desktopSize.width;
 	bool fullscreen = false;
-	float gravity = 0;
+	float gravity = 9.8;
 	double massLock = 0;
 
 
@@ -41,12 +41,14 @@ protected:
 
 	bool hovering = false;
 	bool connectingMode = false;
+	bool createConnectedObjMode = false;
+	bool createChain = false;
 	bool planetMode = false;
-	bool enableCollison = false;
+	bool enableCollison = true;
 	bool borderless = true;
 
 	// Physics and simulation parameters
-	float lineLength = 150;
+	float lineLength = 45;
 	ObjectsList objectList;
 	float deltaTime = 1.0f / 60.0f;
 	float elastic = 0.0;
@@ -63,6 +65,9 @@ protected:
 	bool scaleFlag = false;
 	bool TouchedOnce = false;
 	float moveSpeedScreen = 15.f;
+	int oldGravity = gravity;
+	bool freeze = false;
+	int typeOfLink = 1; //1 -> fixed. 2 -> non fixed. TODO: 3 -> loose/custom by user
 
 	// Object pointers for interaction
 	BaseShape* thisBallPointer = nullptr;
@@ -206,6 +211,25 @@ private:
 					linkingText.setFillColor(sf::Color::White);
 				}
 			}
+			if (event.key.code == sf::Keyboard::K) {
+				createConnectedObjMode = !createConnectedObjMode;
+				previousBallPointer = thisBallPointer;
+			}
+			if (event.key.code == sf::Keyboard::X) {
+				createChain = !createChain;
+				previousBallPointer = thisBallPointer;
+			}
+			if (event.key.code == sf::Keyboard::B && (createConnectedObjMode||createChain) && previousBallPointer!=nullptr) {
+				if (createChain)
+				{
+					previousBallPointer = objectList.createNewLinkedCircle(previousBallPointer, typeOfLink, options.gravity, gradient[gradientStep], currentMousePos, initialVel);
+				}
+				else
+				{
+					objectList.createNewLinkedCircle(previousBallPointer, typeOfLink, options.gravity, gradient[gradientStep], currentMousePos, initialVel);
+				}
+				objCount += 1;
+			}
 			if (event.key.code == sf::Keyboard::BackSpace && mouseClickFlag) {
 				objectList.DeleteThisObj(thisBallPointer);
 			}
@@ -215,7 +239,7 @@ private:
 					BaseShape* newObject = objectList.CreateNewCircle(options.gravity, gradient[gradientStep], currentMousePos, initialVel);
 					objCount += 1;
 					objectList.connectedObjects.AddObject(newObject);
-					objectList.connectedObjects.ConnectRandom(10);
+					objectList.connectedObjects.ConnectRandom(10, typeOfLink);
 				}
 			}
 			if (event.key.code == sf::Keyboard::F11)
@@ -234,7 +258,6 @@ private:
 				createPlanet();
 			}
 			if (event.key.code == sf::Keyboard::F) {
-				sf::Vector2i mousePos = sf::Mouse::getPosition(window);
 				objectList.CreateNewCircle(options.gravity, explosion, sf::Vector2f(currentMousePos.x + 3, currentMousePos.y + 3), initialVel);
 				for (size_t i = 0; i < 50; i++)
 				{
@@ -258,6 +281,27 @@ private:
 			if (event.key.code == sf::Keyboard::S && mouseClickFlag)
 			{
 				scaleFlag = true;
+			}
+			if (event.key.code == sf::Keyboard::Space)
+			{
+				if (!freeze)
+				{
+					options.gravity = 0;
+					freeze = true;
+				}
+				else
+				{
+					freeze = false;
+					options.gravity = oldGravity;
+				}
+			}
+			if (event.key.code == sf::Keyboard::Num1)
+			{
+				typeOfLink = 1;
+			}
+			if (event.key.code == sf::Keyboard::Num2)
+			{
+				typeOfLink = 2;
 			}
 			if (event.key.code == sf::Keyboard::Left)
 				view.move(-moveSpeedScreen, 0.f);
@@ -318,7 +362,7 @@ private:
 			}
 			else if (connectingMode && thisBallPointer != previousBallPointer)
 			{
-				objectList.connectedObjects.MakeNewLink(previousBallPointer, thisBallPointer);
+				objectList.connectedObjects.MakeNewLink(previousBallPointer, thisBallPointer, typeOfLink);
 			}
 			handleScaling();
 		}
@@ -361,7 +405,7 @@ private:
 			BaseShape* newObject = objectList.CreateNewCircle(options.gravity, gradient[gradientStep], currentMousePos, initialVel);
 			objCount++;
 			objectList.connectedObjects.AddObject(newObject);
-			objectList.connectedObjects.ConnectRandom(10);
+			objectList.connectedObjects.ConnectRandom(10, typeOfLink);
 		}
 	}
 
@@ -412,7 +456,7 @@ private:
 
 	void handleConnecting() override {
 		if (connectingMode && thisBallPointer != previousBallPointer) {
-			objectList.connectedObjects.MakeNewLink(previousBallPointer, thisBallPointer);
+			objectList.connectedObjects.MakeNewLink(previousBallPointer, thisBallPointer, typeOfLink);
 		}
 	}
 
@@ -449,7 +493,16 @@ private:
 	}
 
 	void MoveAndDrawObjects() override {
-		objectList.MoveObjects(window_width, window_height, currentFPS, elastic, planetMode, enableCollison, borderless);
+		if (!freeze)
+		{
+			objectList.MoveObjects(window_width, window_height, currentFPS, elastic, planetMode, enableCollison, borderless);
+
+		}
+		else
+		{
+			objectList.MoveWhenFreeze(window_width, window_height, currentFPS, borderless);
+		}
+
 		objectList.DrawObjects(window, currentFPS, planetMode);
 	}
 
