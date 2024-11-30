@@ -6,7 +6,7 @@
 // Base_Shape class inheriting from sf::Transformable
 class Circle :public BaseShape, public sf::CircleShape
 {
-private:
+protected:
 	float radius; //float to not be too big
 	sf::Vector2f velocity;
 
@@ -37,20 +37,6 @@ public:
 		acceleration = sf::Vector2f(0, gravity * 100);//(x axis, y axis)
 		SetVelocity(initialVel);
 		//SetOutline(sf::Color(255, 255, 255), 0.5);  // cool visual
-	}
-
-
-	void SetVelocity(const sf::Vector2f& newVelocity) override {
-		velocity = newVelocity;
-	}
-
-	void SetVelocity(float x, float y) override {
-		velocity.x = x;
-		velocity.y = y;
-	}
-
-	sf::Vector2f GetVelocity() const override {
-		return velocity;
 	}
 
 	//update the position based on verlet integration.

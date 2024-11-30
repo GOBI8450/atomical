@@ -37,19 +37,6 @@ public:
 		acceleration = sf::Vector2f(0, gravity * 100);//(x axis, y axis)
 	}
 
-	void SetVelocity(const sf::Vector2f& newVelocity) override {
-		velocity = newVelocity;
-	}
-
-	void SetVelocity(float x, float y) override {
-		velocity.x = x;
-		velocity.y = y;
-	}
-
-	sf::Vector2f GetVelocity() const override {
-		return velocity;
-	}
-
 	// Modify the updatePosition method:
 	void updatePositionVerlet(float dt) override
 	{

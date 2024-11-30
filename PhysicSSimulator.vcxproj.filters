@@ -63,6 +63,9 @@
     <ClCompile Include="PhysicsSimulationLocal.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ElectricalParticle.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Grid.h">
@@ -111,6 +114,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="PhysicsSimulation_Local.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ElectricalParticle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

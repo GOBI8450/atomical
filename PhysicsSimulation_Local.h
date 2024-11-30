@@ -23,7 +23,7 @@ protected:
 	int window_height = desktopSize.height;
 	int window_width = desktopSize.width;
 	bool fullscreen = false;
-	float gravity = 9.8;
+	int oldGravity = 9.8;
 	double massLock = 0;
 
 
@@ -44,7 +44,7 @@ protected:
 	bool createConnectedObjMode = false;
 	bool createChain = false;
 	bool planetMode = false;
-	bool enableCollison = true;
+	bool enableCollison = false;
 	bool borderless = true;
 
 	// Physics and simulation parameters
@@ -65,7 +65,6 @@ protected:
 	bool scaleFlag = false;
 	bool TouchedOnce = false;
 	float moveSpeedScreen = 15.f;
-	int oldGravity = gravity;
 	bool freeze = false;
 	int typeOfLink = 1; //1 -> fixed. 2 -> non fixed. TODO: 3 -> loose/custom by user
 
@@ -75,6 +74,8 @@ protected:
 
 	// Visual settings
 	sf::Color ball_color = sf::Color(238, 238, 238);
+	sf::Color proton_color = sf::Color(255, 222, 33);
+	sf::Color electron_color = sf::Color(106, 102, 157);
 	sf::Color ball_color2 = sf::Color(50, 5, 11);
 	sf::Color background_color = sf::Color(30, 30, 30);
 	sf::Color buttonColor = sf::Color(55, 58, 64);
@@ -114,6 +115,10 @@ protected:
 	short int startingPointAdder = 31;
 	sf::Vector2f spawnStartingPoint;
 	sf::Vector2f initialVel = sf::Vector2f(4, 0);
+
+	//Electricity:
+	int particleType = 3;
+	sf::Vector2f electronInitialVel = sf::Vector2f(0, 0); // TODO : fix it
 #pragma endregion
 
 public:
@@ -219,7 +224,7 @@ private:
 				createChain = !createChain;
 				previousBallPointer = thisBallPointer;
 			}
-			if (event.key.code == sf::Keyboard::B && (createConnectedObjMode||createChain) && previousBallPointer!=nullptr) {
+			if (event.key.code == sf::Keyboard::B && (createConnectedObjMode || createChain) && previousBallPointer != nullptr) {
 				if (createChain)
 				{
 					previousBallPointer = objectList.createNewLinkedCircle(previousBallPointer, typeOfLink, options.gravity, gradient[gradientStep], currentMousePos, initialVel);
@@ -257,6 +262,9 @@ private:
 			if (event.key.code == sf::Keyboard::L) {
 				createPlanet();
 			}
+			if (event.key.code == sf::Keyboard::E) {
+				createElectricalParticle(particleType);
+			}
 			if (event.key.code == sf::Keyboard::F) {
 				objectList.CreateNewCircle(options.gravity, explosion, sf::Vector2f(currentMousePos.x + 3, currentMousePos.y + 3), initialVel);
 				for (size_t i = 0; i < 50; i++)
@@ -287,13 +295,19 @@ private:
 				if (!freeze)
 				{
 					options.gravity = 0;
+					objectList.ChangeGravityForAll(options.gravity);
 					freeze = true;
 				}
 				else
 				{
 					freeze = false;
 					options.gravity = oldGravity;
+					objectList.ChangeGravityForAll(oldGravity);
 				}
+			}
+			if (event.key.code == sf::Keyboard::Q) {
+				objectList.CreateNewFixedCircle(sf::Color(255, 255, 255), currentMousePos);
+				objCount += 1;
 			}
 			if (event.key.code == sf::Keyboard::Num1)
 			{
@@ -302,6 +316,18 @@ private:
 			if (event.key.code == sf::Keyboard::Num2)
 			{
 				typeOfLink = 2;
+			}
+			if (event.key.code == sf::Keyboard::Num3)
+			{
+				particleType = 3;
+			}
+			if (event.key.code == sf::Keyboard::Num4)
+			{
+				particleType = 4;
+			}
+			if (event.key.code == sf::Keyboard::Num5)
+			{
+				particleType = 5;
 			}
 			if (event.key.code == sf::Keyboard::Left)
 				view.move(-moveSpeedScreen, 0.f);
@@ -412,6 +438,23 @@ private:
 	void createPlanet() override {
 		planetMode = true;
 		objectList.CreateNewPlanet(7000, ball_color, currentMousePos, 20, 5.9722 * pow(10, 15));
+		objCount++;
+	}
+
+	void createElectricalParticle(int particleType) {
+		double muliplier = 100000000;
+		if (particleType == 3)
+		{
+			objectList.CreateNewElectricalParticle(PROTON_CHARGE * muliplier, true, sf::Vector2f(0, 0), proton_color, currentMousePos, 20, PROTON_MASS * muliplier); //TODO: when interacting with objects do that the mass is appropriate or else super high speed
+		}
+		else if (particleType == 4)
+		{
+			objectList.CreateNewElectricalParticle(ELECTRON_CHARGE * muliplier, false, electronInitialVel, electron_color, currentMousePos, 20, ELECTRON_MASS * muliplier);
+		}
+		else if (particleType == 5)
+		{
+			objectList.CreateNewElectricalParticle(-PROTON_CHARGE * muliplier, false, sf::Vector2f(0, 0), electron_color, currentMousePos, 20, PROTON_MASS * muliplier); //TODO: when interacting with objects do that the mass is appropriate or else super high speed
+		}
 		objCount++;
 	}
 
