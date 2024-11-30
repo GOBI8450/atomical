@@ -9,7 +9,7 @@ private:
 	float innerGravity;
 
 public:
-	Planet(float radius, sf::Color color, sf::Vector2f pos, float gravity, double mass, float innerGravity, int objCount) : Circle(radius, color, pos, gravity, mass,sf::Vector2f(0,0), objCount), innerGravity(innerGravity) {
+	Planet(float radius, sf::Color color, sf::Vector2f pos, float gravity, double mass, float innerGravity, int objCount) : Circle(radius, color, pos, gravity, mass, sf::Vector2f(0, 0), objCount), innerGravity(innerGravity) {
 
 	}
 
@@ -75,8 +75,8 @@ public:
 		float acceleration_x = normalized_x * innerGravity * inverse_square_dropoff;
 		float acceleration_y = normalized_y * innerGravity * inverse_square_dropoff;
 
-		object->SetVelocity((object->GetVelocity().x+acceleration_x), (object->GetVelocity().y + acceleration_y));
-		
+		object->SetVelocity((object->GetVelocity().x + acceleration_x), (object->GetVelocity().y + acceleration_y));
+
 		object->SetPosition(object->GetPosition() + object->GetVelocity());
 	}
 
