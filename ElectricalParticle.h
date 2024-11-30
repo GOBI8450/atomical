@@ -17,7 +17,7 @@ class ElectricalParticle :public Circle
 {
 private:
 	double charge;
-	bool isFixed;
+	bool isFixed; 
 
 public:
 	ElectricalParticle(float radius, sf::Color color, sf::Vector2f pos, float gravity, double mass, double charge, bool fixed, sf::Vector2f initialVel, int objCount) : Circle(radius, color, pos, gravity, mass, initialVel, objCount), charge(charge), isFixed(fixed) {
