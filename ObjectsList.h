@@ -19,7 +19,7 @@ private:
 	int objCount = 0;
 	std::mt19937 rnd;
 	Grid* grid;
-	std::vector<Planet*> planetList;
+	std::vector<std::pair<Planet*, sf::VertexArray>> planetList;
 	std::vector<ElectricalParticle*> electricalParticlesList;
 	float lineLength;
 	std::vector<BaseShape*> fixedObjects;
@@ -73,11 +73,51 @@ public:
 		// std::cout << "Creating ball at position: (" << position.x << ", " << position.y << ")\n";
 	}
 
+	void addThickLine(sf::VertexArray& vertices, const sf::Vector2f& start, const sf::Vector2f& end, float thickness, const sf::Color& color) {
+		sf::Vector2f direction = end - start;
+		float length = std::sqrt(direction.x * direction.x + direction.y * direction.y);
+		if (length != 0) {
+			direction.x /= length;
+			direction.y /= length;
+		}
+		sf::Vector2f perpendicular(-direction.y * thickness / 2, direction.x * thickness / 2);
+
+		// Define the 4 corners of the rectangle
+		sf::Vector2f topLeft = start + perpendicular;
+		sf::Vector2f bottomLeft = start - perpendicular;
+		sf::Vector2f topRight = end + perpendicular;
+		sf::Vector2f bottomRight = end - perpendicular;
+
+		// Append the 4 vertices to the VertexArray
+		vertices.append(sf::Vertex(topLeft, color));
+		vertices.append(sf::Vertex(bottomLeft, color));
+		vertices.append(sf::Vertex(bottomRight, color));
+		vertices.append(sf::Vertex(topRight, color));
+	}
+
+	void rebuildVertexArray(sf::VertexArray& vertices, size_t maxVertices) {
+		// Only keep the last `maxVertices` vertices, corresponding to `maxVertices / 4` segments
+		size_t vertexCount = vertices.getVertexCount();
+		if (vertexCount > maxVertices) {
+			// Rebuild the array to only include the last `maxVertices` vertices
+			sf::VertexArray newVertices(sf::Quads);
+
+			// Copy the last `maxVertices` vertices
+			for (size_t i = vertexCount - maxVertices; i < vertexCount; ++i) {
+				newVertices.append(vertices[i]);
+			}
+
+			// Replace old vertices with the new one
+			vertices = newVertices;
+		}
+	}
+
 	void CreateNewPlanet(float innerGravity, sf::Color color, sf::Vector2f pos, float radius, float mass) {
 		float gravity = 0;
 		Planet* planet = new Planet(radius, color, pos, gravity, mass, innerGravity, objCount);
 		objList.push_back(planet); // Pushing back the BaseShape* into the vector of all objects
-		planetList.push_back(planet); // Pushing back the BaseShape* into the vector of planets
+		sf::VertexArray trackingLine(sf::Quads);
+		planetList.push_back(std::make_pair(planet, trackingLine)); // Pushing back the Planet* and tracking line into the vector of planets
 		objCount += 1;
 	}
 
@@ -370,16 +410,14 @@ public:
 		//grid->DrawGrids(window);
 		if (planetMode)
 		{
-			for (auto& ball : objList) {
-				ball->draw(window);
+			for (auto& planet : planetList) {
+				window.draw(planet.second);
 			}
 		}
-		else
-		{
-			for (auto& ball : objList) {
-				ball->draw(window);
-			}
+		for (auto& ball : objList) {
+			ball->draw(window);
 		}
+
 	}
 
 	void MoveWhenFreeze(int window_width, int window_height, float fps, bool borderless) {
@@ -431,14 +469,37 @@ public:
 		{
 			HandleAllCollisions(window_width, window_height, elastic);
 		}
-		for (auto& planet : planetList)
+		for (int i = 0; i < planetList.size(); i++)
 		{
 			for (auto& ball : objList) {
-				if (typeid(*ball) != typeid(*planet))
+				if (typeid(*ball) != typeid(*planetList[i].first))
 				{
-					planet->Gravitate(ball);
+					planetList[i].first->Gravitate(ball);
 				}
 			}
+			sf::Vector2f allForces = sf::Vector2f(0, 0);
+			for (int j = 0; j < planetList.size(); j++) {
+				if (i != j) {
+					allForces += planetList[i].first->GravitateAccurate(planetList[j].first);
+				}
+			}
+			planetList[i].first->applyForce(allForces);
+			addThickLine(planetList[i].second, planetList[i].first->GetOldPosition(), planetList[i].first->GetPosition(), planetList[i].first->GetRadius() / 1.5, planetList[i].first->GetColor());
+			rebuildVertexArray(planetList[i].second, 252);
+			for (int alphaChange = planetList[i].second.getVertexCount() - 4; alphaChange >= 0; alphaChange -= 4)  // Start from last rectangle and move backwards
+			{
+				sf::Color newColor = planetList[i].first->GetColor();
+
+				// Gradually decrease alpha value from the last rectangle to the first (more transparent at the start, less transparent later)
+				newColor.a = std::max<sf::Uint8>(0u, newColor.a - (planetList[i].second.getVertexCount() - alphaChange - 4));  // Ensure the types match
+
+				// Apply the modified color to all 4 vertices of the current rectangle
+				planetList[i].second[alphaChange].color = newColor;
+				planetList[i].second[alphaChange + 1].color = newColor;
+				planetList[i].second[alphaChange + 2].color = newColor;
+				planetList[i].second[alphaChange + 3].color = newColor;
+			}
+			//planetList[i].first->SetOldPosition(planetList[i].first->GetPosition());
 		}
 		for (int i = 0; i < electricalParticlesList.size(); i++)// o(n^2) so not optimal but must do.
 		{
@@ -455,7 +516,7 @@ public:
 			}
 		}
 		connectedObjects.ApplyAllLinks();
-		if (planetMode)
+		if (1==0)
 		{
 			for (auto& ball : objList) {
 				ball->updatePositionEuler(deltaTime);
@@ -473,63 +534,61 @@ public:
 		}
 	}
 
-	void MoveAndDraw(sf::RenderWindow& window, float fps, float elastic, bool planetMode, bool enableCollison, bool borderless) {
-		if (borderless)
-		{
-			grid = new GridUnorderd();
-		}
-		else
-		{
-			grid = new GridFixed();
-		}
-
-		grid->clear(); // Clear the grid
-
-		for (auto& ball : objList) {
-			grid->InsertObj(ball); // Inserting BaseShape* objects
-		}
-
-		if (fps <= 0) {
-			fps = 60;
-		}
-		float deltaTime = 1 / fps; // Calculate deltaTime for movement
-		if (enableCollison)
-		{
-			HandleAllCollisions(window.getSize().x, window.getSize().y, elastic);
-		}
-		for (auto& planet : planetList)
-		{
-			for (auto& ball : objList) {
-				if (typeid(*ball) != typeid(*planet))
-				{
-					planet->Gravitate(ball);
-				}
-			}
-		}
-		connectedObjects.Draw(window);
-		//grid->DrawGrids(window);
-		for (int i = 0; i < electricalParticlesList.size(); i++)
-		{
-			for (int j = 0; j < electricalParticlesList.size(); j++)
-			{
-				if (i != j) {
-					electricalParticlesList[i]->coulombLaw(electricalParticlesList[j]);
-				}
-			}
-		}
-		if (planetMode)
-		{
-			for (auto& shape : objList) {
-				shape->updatePositionEuler(deltaTime);
-				shape->draw(window);
-			}
-		}
-		else
-		{
-			for (auto& shape : objList) {
-				shape->updatePositionVerlet(deltaTime);
-				shape->draw(window);
-			}
-		}
-	}
+	//Move And draw:
+	//void MoveAndDraw(sf::RenderWindow& window, float fps, float elastic, bool planetMode, bool enableCollison, bool borderless) {
+	//	if (borderless)
+	//	{
+	//		grid = new GridUnorderd();
+	//	}
+	//	else
+	//	{
+	//		grid = new GridFixed();
+	//	}
+	//	grid->clear(); // Clear the grid
+	//	for (auto& ball : objList) {
+	//		grid->InsertObj(ball); // Inserting BaseShape* objects
+	//	}
+	//	if (fps <= 0) {
+	//		fps = 60;
+	//	}
+	//	float deltaTime = 1 / fps; // Calculate deltaTime for movement
+	//	if (enableCollison)
+	//	{
+	//		HandleAllCollisions(window.getSize().x, window.getSize().y, elastic);
+	//	}
+	//	for (auto& planet : planetList)
+	//	{
+	//		for (auto& ball : objList) {
+	//			if (typeid(*ball) != typeid(*planet.first))
+	//			{
+	//				planet.first->Gravitate(ball);
+	//			}
+	//		}
+	//	}
+	//	connectedObjects.Draw(window);
+	//	//grid->DrawGrids(window);
+	//	for (int i = 0; i < electricalParticlesList.size(); i++)
+	//	{
+	//		for (int j = 0; j < electricalParticlesList.size(); j++)
+	//		{
+	//			if (i != j) {
+	//				electricalParticlesList[i]->coulombLaw(electricalParticlesList[j]);
+	//			}
+	//		}
+	//	}
+	//	if (planetMode)
+	//	{
+	//		for (auto& shape : objList) {
+	//			shape->updatePositionEuler(deltaTime);
+	//			shape->draw(window);
+	//		}
+	//	}
+	//	else
+	//	{
+	//		for (auto& shape : objList) {
+	//			shape->updatePositionVerlet(deltaTime);
+	//			shape->draw(window);
+	//		}
+	//	}
+	//}
 };

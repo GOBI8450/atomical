@@ -114,7 +114,7 @@ protected:
 	int posXStartingPoint = radius;
 	short int startingPointAdder = 31;
 	sf::Vector2f spawnStartingPoint;
-	sf::Vector2f initialVel = sf::Vector2f(4, 0);
+	sf::Vector2f initialVel = sf::Vector2f(444444242424, 0);
 
 	//Electricity:
 	int particleType = 3;
@@ -329,6 +329,10 @@ private:
 			{
 				particleType = 5;
 			}
+			if (event.key.code == sf::Keyboard::Num0)
+			{
+				The3BodyProblem();
+			}
 			if (event.key.code == sf::Keyboard::Left)
 				view.move(-moveSpeedScreen, 0.f);
 			if (event.key.code == sf::Keyboard::Right)
@@ -437,7 +441,15 @@ private:
 
 	void createPlanet() override {
 		planetMode = true;
-		objectList.CreateNewPlanet(7000, ball_color, currentMousePos, 20, 5.9722 * pow(10, 15));
+		objectList.CreateNewPlanet(7000, ball_color, currentMousePos, 20, 5.9722 * pow(10, 16));
+		objCount++;
+	}
+
+	void The3BodyProblem() {
+		planetMode = true;
+		objectList.CreateNewPlanet(7000, sf::Color(205, 28, 24), sf::Vector2f(990, 466.02540), 20, 5.9722 * pow(10, 16));
+		objectList.CreateNewPlanet(7000, sf::Color(0, 71, 171), sf::Vector2f(1000-110, 600), 20, 5.9722 * pow(10, 16));
+		objectList.CreateNewPlanet(7000, sf::Color(137, 243, 54), sf::Vector2f(1200 - 110, 600),20, 5.9722 * pow(10, 16));
 		objCount++;
 	}
 

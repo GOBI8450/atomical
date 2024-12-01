@@ -40,6 +40,10 @@ public:
 		gravity = other.gravity;
 	}
 
+	std::string GetType() const override {
+		return "ElectPart";
+	}
+
 	double GetCharge() {
 		return charge;
 	}

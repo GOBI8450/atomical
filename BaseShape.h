@@ -113,7 +113,9 @@ public:
 	virtual void SetPosition(sf::Vector2f newPos) {}
 
 	void SetVelocity(const sf::Vector2f& newVelocity) { velocity = newVelocity; }
+
 	void SetVelocity(float x, float y) { velocity = sf::Vector2f(x, y); }
+
 	sf::Vector2f GetVelocity() const { return velocity; }
 
 	void SetAcceleration(sf::Vector2f newAcceleration) {

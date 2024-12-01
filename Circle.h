@@ -23,6 +23,7 @@ public:
 		setPosition(radius, radius);
 		oldPosition = sf::Vector2f(radius, radius);
 		acceleration = sf::Vector2f(0, gravity * 100); //(x axis, y axis)
+		oldPosition = getPosition() - velocity;
 	}
 
 	// Constructor with radius, color, gravity, mass, position
@@ -36,6 +37,7 @@ public:
 		oldPosition = pos;
 		acceleration = sf::Vector2f(0, gravity * 100);//(x axis, y axis)
 		SetVelocity(initialVel);
+		oldPosition = pos - velocity;
 		//SetOutline(sf::Color(255, 255, 255), 0.5);  // cool visual
 	}
 
