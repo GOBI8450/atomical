@@ -37,7 +37,7 @@ public:
 	{
 		linked = -1;
 		acceleration = sf::Vector2f(0, gravity); //(x axis, y axis)
-		objectCount=objCount;
+		objectCount = objCount;
 		id = objectCount;
 	}
 	// Copy constructor
@@ -49,7 +49,8 @@ public:
 		mass(other.mass),
 		fps(other.fps),
 		linked(other.linked)
-	{}
+	{
+	}
 
 	virtual ~BaseShape() { objectCount--; }
 
@@ -60,7 +61,8 @@ public:
 
 	//If you wanna apply force to the circle:
 	virtual void applyForce(sf::Vector2f force)
-	{}
+	{
+	}
 
 	// Set shape color
 	virtual void setColor(sf::Color newColor) {}
@@ -136,10 +138,10 @@ public:
 	std::string GetIDStr() { return std::to_string(id); }
 
 	std::string GetColorAsString() {
-		return "R->" + std::to_string(color.r)+ ", G->" + std::to_string(color.g) + ", B->" + std::to_string(color.b);
+		return "R->" + std::to_string(color.r) + ", G->" + std::to_string(color.g) + ", B->" + std::to_string(color.b);
 	}
 
-	virtual std::string GetType() const{
+	virtual std::string GetType() const {
 		return "BaseShape";
 	}
 
@@ -147,7 +149,7 @@ public:
 		return;
 	}
 
-	virtual std::string ToString() const{
+	virtual std::string ToString() const {
 		std::stringstream ss;
 		sf::Vector2f pos = GetPosition();
 		ss << GetType() << ":"       // Shape type
