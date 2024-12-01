@@ -7,7 +7,7 @@
 class BaseShape
 {
 protected:
-	sf::Vector2f oldPosition; //Vector for X axis and Y axis
+	sf::Vector2f oldPosition;  //Vector for X axis and Y axis
 	sf::Vector2f acceleration; //Vector for X axis and Y axis
 	sf::Color color;
 	float gravity; // float to not be too strong
