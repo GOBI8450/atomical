@@ -9,6 +9,7 @@ class BaseShape
 protected:
 	sf::Vector2f oldPosition; //Vector for X axis and Y axis
 	sf::Vector2f acceleration; //Vector for X axis and Y axis
+	sf::Vector2f velocity;
 	sf::Color color;
 	float gravity; // float to not be too strong
 	double mass;//be as fat as you want brotha
@@ -37,7 +38,7 @@ public:
 	{
 		linked = -1;
 		acceleration = sf::Vector2f(0, gravity); //(x axis, y axis)
-		objectCount=objCount;
+		objectCount = objCount;
 		id = objectCount;
 	}
 	// Copy constructor
@@ -49,7 +50,8 @@ public:
 		mass(other.mass),
 		fps(other.fps),
 		linked(other.linked)
-	{}
+	{
+	}
 
 	virtual ~BaseShape() { objectCount--; }
 
@@ -59,8 +61,13 @@ public:
 	virtual void updatePositionEuler(float dt) {}
 
 	//If you wanna apply force to the circle:
-	virtual void applyForce(sf::Vector2f force)
-	{}
+	void applyOneForce(sf::Vector2f force) {
+		acceleration = sf::Vector2f(force.x / mass, force.y / mass);
+	}
+
+	void addForce(sf::Vector2f force) {
+		acceleration += sf::Vector2f(force.x / mass, force.y / mass);
+	}
 
 	// Set shape color
 	virtual void setColor(sf::Color newColor) {}
@@ -99,11 +106,27 @@ public:
 
 	virtual std::string GetPositionStr() const { return ""; }
 
+	float GetGravity() {
+		return gravity;
+	}
+
+	void SetGravity(float newGravity) {
+		gravity = newGravity;
+	}
+
 	virtual void SetPosition(sf::Vector2f newPos) {}
 
-	virtual void SetVelocity(const sf::Vector2f& newVelocity) {}
-	virtual void SetVelocity(float x, float y) {}
-	virtual sf::Vector2f GetVelocity() const { return sf::Vector2f(); }
+	void SetVelocity(const sf::Vector2f& newVelocity) { 
+		velocity = newVelocity; 
+		oldPosition = oldPosition - velocity * (1.f / 60.f);
+	}
+
+	void SetVelocity(float x, float y) { 
+		velocity = sf::Vector2f(x, y); 
+		oldPosition = oldPosition - velocity * (1.f / 60.f);
+	}
+
+	sf::Vector2f GetVelocity() const { return velocity; }
 
 	void SetAcceleration(sf::Vector2f newAcceleration) {
 		acceleration = newAcceleration;
@@ -128,7 +151,6 @@ public:
 
 	virtual void SetOutline(sf::Color color, float thickness) {}
 
-
 	sf::Color GetColor() { return color; }
 
 	int GetID() { return id; };
@@ -136,18 +158,22 @@ public:
 	std::string GetIDStr() { return std::to_string(id); }
 
 	std::string GetColorAsString() {
-		return "R->" + std::to_string(color.r)+ ", G->" + std::to_string(color.g) + ", B->" + std::to_string(color.b);
+		return "R->" + std::to_string(color.r) + ", G->" + std::to_string(color.g) + ", B->" + std::to_string(color.b);
 	}
 
-	virtual std::string GetType() const{
+	virtual std::string GetType() const {
 		return "BaseShape";
 	}
 
-	virtual void gdetGlobalBounds() {
-		return;
+	virtual sf::FloatRect GetGlobalBounds() {
+		return sf::FloatRect();
 	}
 
-	virtual std::string ToString() const{
+	virtual float GetEstimatedSize() {
+		return 0;
+	}
+
+	virtual std::string ToString() const {
 		std::stringstream ss;
 		sf::Vector2f pos = GetPosition();
 		ss << GetType() << ":"       // Shape type

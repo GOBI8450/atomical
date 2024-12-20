@@ -46,7 +46,7 @@ public:
 	void MakeNewLink(BaseShape* obj1, BaseShape* obj2, int type) {
 		AddObject(obj1);
 		AddObject(obj2);
-
+		
 		if (type == 1) { // Fixed connection
 			sf::Vector2f delta = obj2->GetPosition() - obj1->GetPosition();
 			float thisLineLength = std::sqrt(delta.x * delta.x + delta.y * delta.y);
@@ -133,8 +133,8 @@ public:
 		// Apply a small force instead of directly modifying velocity
 		float forceMagnitude = 0.1f; // Adjust this value as needed
 		sf::Vector2f force(normalizedVector.x * forceMagnitude, normalizedVector.y * forceMagnitude);
-		obj1->applyForce(sf::Vector2f(-force.x, -force.y));
-		obj2->applyForce(force);
+		obj1->addForce(sf::Vector2f(-force.x, -force.y));
+		obj2->addForce(force);
 	}
 
 	void ApplyLinkWithFixedAngle(BaseShape* obj1, BaseShape* obj2, float fixedAngle, float thisLineLength) {
@@ -202,8 +202,8 @@ public:
 
 		// Apply forces with additional damping
 		float forceDamping = 0.3f;
-		obj1->applyForce(-rotationalForce * forceDamping);
-		obj2->applyForce(rotationalForce * forceDamping);
+		obj1->addForce(-rotationalForce * forceDamping);
+		obj2->addForce(rotationalForce * forceDamping);
 	}
 
 	void ApplyAllLinks() {
@@ -225,8 +225,6 @@ public:
 	}
 
 	void Draw(sf::RenderWindow& window) {
-		//ApplyAllLinks();
-		//TODO: now linking wont work for singleplayer quiqk fix it
 		sf::VertexArray lines(sf::Lines);
 		for (const auto& pair : fixedConnections) {
 			BaseShape* obj1 = pair.first;

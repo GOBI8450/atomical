@@ -6,6 +6,7 @@
 #include "LineLink.h"
 #include "Rectangle.h"
 #include "Planet.h"
+#include "ElectricalParticle.h"
 #include <iostream>
 #include <thread>
 #include <functional>
@@ -18,8 +19,10 @@ private:
 	int objCount = 0;
 	std::mt19937 rnd;
 	Grid* grid;
-	std::vector<Planet*> planetList;
+	std::vector<std::pair<Planet*, sf::VertexArray>> planetList;
+	std::vector<ElectricalParticle*> electricalParticlesList;
 	float lineLength;
+	std::vector<BaseShape*> fixedObjects;
 
 public:
 	LineLink connectedObjects = LineLink(lineLength);
@@ -45,8 +48,6 @@ public:
 
 	BaseShape* CreateNewCircle(float gravity, sf::Color color, sf::Vector2f pos, sf::Vector2f initialVel) {
 		std::uniform_int_distribution<int> radiusRange(20, 20);
-		std::uniform_int_distribution<int> rndXRange(300, 500);  // Replace 920 with actual window width
-		// std::uniform_int_distribution<int> rndYRange(50, 1280 - 50); // Replace 1280 with actual window height
 
 		sf::Vector2f position(pos);
 		int randomRadius = radiusRange(rnd);
@@ -58,12 +59,73 @@ public:
 		// std::cout << "Creating ball at position: (" << position.x << ", " << position.y << ")\n";
 	}
 
+	BaseShape* CreateNewFixedCircle(sf::Color color, sf::Vector2f pos) {
+		std::uniform_int_distribution<int> radiusRange(20, 20);
+
+		sf::Vector2f position(pos);
+		int randomRadius = radiusRange(rnd);
+		int mass = randomRadius * 3;//no real meaning for the multiply
+		objCount += 1;
+		BaseShape* ball = new Circle(randomRadius, color, position, 0, mass, sf::Vector2f(0, 0), objCount);
+		objList.push_back(ball); // Pushing back the BaseShape* into the vector of all objects
+		fixedObjects.push_back(ball); // Pushing back the BaseShape* into the vector of fixed objects
+		return ball;
+		// std::cout << "Creating ball at position: (" << position.x << ", " << position.y << ")\n";
+	}
+
+	void addThickLine(sf::VertexArray& vertices, const sf::Vector2f& start, const sf::Vector2f& end, float thickness, const sf::Color& color) {
+		sf::Vector2f direction = end - start;
+		float length = std::sqrt(direction.x * direction.x + direction.y * direction.y);
+		if (length != 0) {
+			direction.x /= length;
+			direction.y /= length;
+		}
+		sf::Vector2f perpendicular(-direction.y * thickness / 2, direction.x * thickness / 2);
+
+		// Define the 4 corners of the rectangle
+		sf::Vector2f topLeft = start + perpendicular;
+		sf::Vector2f bottomLeft = start - perpendicular;
+		sf::Vector2f topRight = end + perpendicular;
+		sf::Vector2f bottomRight = end - perpendicular;
+
+		// Append the 4 vertices to the VertexArray
+		vertices.append(sf::Vertex(topLeft, color));
+		vertices.append(sf::Vertex(bottomLeft, color));
+		vertices.append(sf::Vertex(bottomRight, color));
+		vertices.append(sf::Vertex(topRight, color));
+	}
+
+	void rebuildVertexArray(sf::VertexArray& vertices, size_t maxVertices) {
+		// Only keep the last `maxVertices` vertices, corresponding to `maxVertices / 4` segments
+		size_t vertexCount = vertices.getVertexCount();
+		if (vertexCount > maxVertices) {
+			// Rebuild the array to only include the last `maxVertices` vertices
+			sf::VertexArray newVertices(sf::Quads);
+
+			// Copy the last `maxVertices` vertices
+			for (size_t i = vertexCount - maxVertices; i < vertexCount; ++i) {
+				newVertices.append(vertices[i]);
+			}
+
+			// Replace old vertices with the new one
+			vertices = newVertices;
+		}
+	}
+
 	void CreateNewPlanet(float innerGravity, sf::Color color, sf::Vector2f pos, float radius, float mass) {
 		float gravity = 0;
 		Planet* planet = new Planet(radius, color, pos, gravity, mass, innerGravity, objCount);
-		//^^^^^^float radius, sf::Color color, sf::Vector2f pos, float gravity, double mass, float innerGravity^^^^
-		objList.push_back(planet); // Pushing back the BaseShape* into the vector
-		planetList.push_back(planet); // Pushing back the BaseShape* into the vector
+		objList.push_back(planet); // Pushing back the BaseShape* into the vector of all objects
+		sf::VertexArray trackingLine(sf::Quads);
+		planetList.push_back(std::make_pair(planet, trackingLine)); // Pushing back the Planet* and tracking line into the vector of planets
+		objCount += 1;
+	}
+
+	void CreateNewElectricalParticle(double charge, bool isFixed, sf::Vector2f initialVel, sf::Color color, sf::Vector2f pos, float radius, float mass) {
+		float gravity = 0;
+		ElectricalParticle* particle = new ElectricalParticle(radius, color, pos, gravity, mass, charge, isFixed, initialVel, objCount);
+		objList.push_back(particle); // Pushing back the BaseShape* into the vector of all objects
+		electricalParticlesList.push_back(particle); // Pushing back the BaseShape* into the vector of electrical particles
 		objCount += 1;
 	}
 
@@ -88,9 +150,9 @@ public:
 		connectedObjects.MakeNewLink(shape, target, type);
 	} //TODO : Use this because it is more OOP way
 
-	BaseShape* createNewLinkedCircle(BaseShape* target, int type,float gravity, sf::Color color, sf::Vector2f pos, sf::Vector2f initialVel) {
-		CreateNewCircle(gravity,color,pos,initialVel);
-		connectedObjects.MakeNewLink(objList[objCount-1], target, type);
+	BaseShape* createNewLinkedCircle(BaseShape* target, int type, float gravity, sf::Color color, sf::Vector2f pos, sf::Vector2f initialVel) {
+		CreateNewCircle(gravity, color, pos, initialVel);
+		connectedObjects.MakeNewLink(objList[objCount - 1], target, type);
 		return objList[objCount - 1];
 	}
 
@@ -100,11 +162,11 @@ public:
 				for (auto& obj : vecObj) {
 					// Check if obj is a Circle
 					if (Circle* circle = dynamic_cast<Circle*>(obj)) {
-						circle->handleWallCollision( window_width,  window_height);
+						circle->handleWallCollision(window_width, window_height);
 					}
 					// Check if obj is a Rectangle
 					else if (RectangleClass* rectangle = dynamic_cast<RectangleClass*>(obj)) {
-						rectangle->handleWallCollision( window_width,  window_height);
+						rectangle->handleWallCollision(window_width, window_height);
 					}
 
 					// Get nearby objects for collision handling
@@ -186,16 +248,19 @@ public:
 		}
 	}
 
-	void HandleAllCollisions(int window_width, int window_height, float elastic) {
+	void HandleAllCollisions(int window_width, int window_height, float elastic, bool borderless) {
 		if (elastic == 0) { // Verlet integration
 			for (auto& obj : objList) {
-				// Check if obj is a Circle
-				if (Circle* circle = dynamic_cast<Circle*>(obj)) {
-					circle->handleWallCollision( window_width,  window_height);
-				}
-				// Check if obj is a Rectangle
-				else if (RectangleClass* rectangle = dynamic_cast<RectangleClass*>(obj)) {
-					rectangle->handleWallCollision(window_width, window_height);
+				if (!borderless)
+				{
+					// Check if obj is a Circle
+					if (Circle* circle = dynamic_cast<Circle*>(obj)) {
+						circle->handleWallCollision(window_width, window_height);
+					}
+					// Check if obj is a Rectangle
+					else if (RectangleClass* rectangle = dynamic_cast<RectangleClass*>(obj)) {
+						rectangle->handleWallCollision(window_width, window_height);
+					}
 				}
 
 				// Get nearby objects for collision handling
@@ -236,13 +301,16 @@ public:
 		}
 		else { // Euler integration
 			for (auto& obj : objList) {
-				// Check if obj is a Circle
-				if (Circle* circle = dynamic_cast<Circle*>(obj)) {
-					circle->handleWallCollision(window_width, window_height);
-				}
-				// Check if obj is a Rectangle
-				else if (RectangleClass* rectangle = dynamic_cast<RectangleClass*>(obj)) {
-					rectangle->handleWallCollision(window_width, window_height);
+				if (!borderless)
+				{
+					// Check if obj is a Circle
+					if (Circle* circle = dynamic_cast<Circle*>(obj)) {
+						circle->handleWallCollision(window_width, window_height);
+					}
+					// Check if obj is a Rectangle
+					else if (RectangleClass* rectangle = dynamic_cast<RectangleClass*>(obj)) {
+						rectangle->handleWallCollision(window_width, window_height);
+					}
 				}
 
 				// Get nearby objects for collision handling
@@ -287,9 +355,9 @@ public:
 	}
 
 	BaseShape* FindByIDStr(std::string id) { //TODO: better serch???
-		for (auto obj:objList )
+		for (auto obj : objList)
 		{
-			if (obj->GetIDStr()==id)
+			if (obj->GetIDStr() == id)
 			{
 				return obj;
 			}
@@ -306,6 +374,23 @@ public:
 			}
 		}
 		return nullptr;
+	}
+
+	void ChangeGravityForAll(float gravity) {
+		for (auto& obj : objList)
+		{
+			obj->SetGravity(gravity);
+		}
+	}
+
+	void ChangeVelocityForAll(sf::Vector2f newVelocity) {
+		for (auto& obj : objList)
+		{
+			if (obj->GetType() == "Circle" || obj->GetType() == "Rectangle")
+			{
+				obj->SetVelocity(newVelocity);
+			}
+		}
 	}
 
 	// In ObjectsList class:
@@ -326,6 +411,7 @@ public:
 		}
 		return -1;
 	}
+
 	std::vector<BaseShape> ConvertForSending() {
 		std::vector<BaseShape> objectsVec_NON_POINTER;
 		for (auto& obj : objList)
@@ -335,34 +421,33 @@ public:
 		return objectsVec_NON_POINTER;
 	}
 
-	void DrawObjects(sf::RenderWindow& window, float fps,bool planetMode) {
+
+	void DrawObjects(sf::RenderWindow& window, float fps, bool planetMode) {
 		float deltaTime = 1 / fps;
 		connectedObjects.Draw(window);
 		//grid->DrawGrids(window);
 		if (planetMode)
 		{
-			for (auto& ball : objList) {
-				ball->draw(window);
+			for (auto& planet : planetList) {
+				window.draw(planet.second);
 			}
 		}
-		else
-		{
-			for (auto& ball : objList) {
-				ball->draw(window);
-			}
+		for (auto& ball : objList) {
+			ball->draw(window);
 		}
+
 	}
 
 	void MoveWhenFreeze(int window_width, int window_height, float fps, bool borderless) {
-		if (borderless)
+		/*if (borderless)
 		{
 			grid = new GridUnorderd();
 		}
 		else
 		{
 			grid = new GridFixed();
-		}
-
+		}*/
+		grid = new GridUnorderd();
 		grid->clear(); // Clear the grid
 
 		for (auto& ball : objList) {
@@ -378,15 +463,16 @@ public:
 
 	}
 
-	void MoveObjects(int window_width,int window_height, float fps, float elastic, bool planetMode, bool enableCollison, bool borderless) {
-		if (borderless)
-		{
-			grid = new GridUnorderd();
-		}
-		else
-		{
-			grid = new GridFixed();
-		}
+	void MoveObjects(int window_width, int window_height, float fps, float elastic, bool planetMode, bool enableCollison, bool borderless) {
+		//if (borderless)
+		//{
+		//	grid = new GridUnorderd();
+		//}
+		//else
+		//{
+		//	grid = new GridFixed();
+		//}
+		grid = new GridUnorderd();
 
 		grid->clear(); // Clear the grid
 
@@ -397,83 +483,131 @@ public:
 		if (fps <= 0) {
 			fps = 60;
 		}
-		float deltaTime = 1 / fps; // Calculate deltaTime for movement
+		float dt = 1 / fps; // Calculate deltaTime for movement
 		if (enableCollison)
 		{
-			HandleAllCollisions(window_width, window_height, elastic);
+			HandleAllCollisions(window_width, window_height, elastic, borderless);
 		}
-		for (auto& planet : planetList)
+		for (int i = 0; i < planetList.size(); i++)
 		{
 			for (auto& ball : objList) {
-				if (typeid(*ball) != typeid(*planet))
+				if (typeid(*ball) != typeid(*planetList[i].first))
 				{
-					planet->Gravitate(ball);
+					planetList[i].first->Gravitate(ball,dt);
 				}
+			}
+			sf::Vector2f allForces = sf::Vector2f(0, 0);
+			for (int j = 0; j < planetList.size(); j++) {
+				if (i != j) {
+					allForces += planetList[i].first->GravitateAccurate(planetList[j].first);
+				}
+			}
+			planetList[i].first->applyOneForce(allForces);
+			addThickLine(planetList[i].second, planetList[i].first->GetOldPosition(), planetList[i].first->GetPosition(), planetList[i].first->GetRadius() / 1.5, planetList[i].first->GetColor());
+			rebuildVertexArray(planetList[i].second, 252);
+			for (int alphaChange = planetList[i].second.getVertexCount() - 4; alphaChange >= 0; alphaChange -= 4)  // Start from last rectangle and move backwards
+			{
+				sf::Color newColor = planetList[i].first->GetColor();
+
+				// Gradually decrease alpha value from the last rectangle to the first (more transparent at the start, less transparent later)
+				newColor.a = std::max<sf::Uint8>(0u, newColor.a - (planetList[i].second.getVertexCount() - alphaChange - 4));  // Ensure the types match
+
+				// Apply the modified color to all 4 vertices of the current rectangle
+				planetList[i].second[alphaChange].color = newColor;
+				planetList[i].second[alphaChange + 1].color = newColor;
+				planetList[i].second[alphaChange + 2].color = newColor;
+				planetList[i].second[alphaChange + 3].color = newColor;
+			}
+			//planetList[i].first->SetOldPosition(planetList[i].first->GetPosition());
+		}
+		for (int i = 0; i < electricalParticlesList.size(); i++)// o(n^2) so not optimal but must do.
+		{
+			if (!electricalParticlesList[i]->GetIsFixed())
+			{
+				sf::Vector2f allForces = sf::Vector2f(0, 0);
+				for (int j = 0; j < electricalParticlesList.size(); j++)
+				{
+					if (i != j || !electricalParticlesList[j]->GetIsFixed()) {
+						allForces += electricalParticlesList[i]->coulombLaw(electricalParticlesList[j]);
+					}
+				}
+				electricalParticlesList[i]->applyOneForce(allForces);
 			}
 		}
 		connectedObjects.ApplyAllLinks();
-		if (planetMode)
+		if (1==0)
 		{
 			for (auto& ball : objList) {
-				ball->updatePositionEuler(deltaTime);
+				ball->updatePositionEuler(dt);
 			}
 		}
 		else
 		{
 			for (auto& ball : objList) {
-				ball->updatePositionVerlet(deltaTime);
+				ball->updatePositionVerlet(dt);
 			}
+		}
+		for (auto& ball : fixedObjects) {
+			ball->SetPosition(ball->GetOldPosition());
+			ball->SetAcceleration(sf::Vector2f(0, 0));
 		}
 	}
 
-	void MoveAndDraw(sf::RenderWindow& window, float fps, float elastic, bool planetMode, bool enableCollison, bool borderless) {
-		if (borderless)
-		{
-			grid = new GridUnorderd();
-		}
-		else
-		{
-			grid = new GridFixed();
-		}
-
-		grid->clear(); // Clear the grid
-
-		for (auto& ball : objList) {
-			grid->InsertObj(ball); // Inserting BaseShape* objects
-		}
-
-		if (fps <= 0) {
-			fps = 60;
-		}
-		float deltaTime = 1 / fps; // Calculate deltaTime for movement
-		if (enableCollison)
-		{
-			HandleAllCollisions(window.getSize().x, window.getSize().y, elastic);
-		}
-		for (auto& planet : planetList)
-		{
-			for (auto& ball : objList) {
-				if (typeid(*ball) != typeid(*planet))
-				{
-					planet->Gravitate(ball);
-				}
-			}
-		}
-		connectedObjects.Draw(window);
-		//grid->DrawGrids(window);
-		if (planetMode)
-		{
-			for (auto& ball : objList) {
-				ball->updatePositionEuler(deltaTime);
-				ball->draw(window);
-			}
-		}
-		else
-		{
-			for (auto& ball : objList) {
-				ball->updatePositionVerlet(deltaTime);
-				ball->draw(window);
-			}
-		}
-	}
+	//Move And draw:
+	//void MoveAndDraw(sf::RenderWindow& window, float fps, float elastic, bool planetMode, bool enableCollison, bool borderless) {
+	//	if (borderless)
+	//	{
+	//		grid = new GridUnorderd();
+	//	}
+	//	else
+	//	{
+	//		grid = new GridFixed();
+	//	}
+	//	grid->clear(); // Clear the grid
+	//	for (auto& ball : objList) {
+	//		grid->InsertObj(ball); // Inserting BaseShape* objects
+	//	}
+	//	if (fps <= 0) {
+	//		fps = 60;
+	//	}
+	//	float deltaTime = 1 / fps; // Calculate deltaTime for movement
+	//	if (enableCollison)
+	//	{
+	//		HandleAllCollisions(window.getSize().x, window.getSize().y, elastic);
+	//	}
+	//	for (auto& planet : planetList)
+	//	{
+	//		for (auto& ball : objList) {
+	//			if (typeid(*ball) != typeid(*planet.first))
+	//			{
+	//				planet.first->Gravitate(ball);
+	//			}
+	//		}
+	//	}
+	//	connectedObjects.Draw(window);
+	//	//grid->DrawGrids(window);
+	//	for (int i = 0; i < electricalParticlesList.size(); i++)
+	//	{
+	//		for (int j = 0; j < electricalParticlesList.size(); j++)
+	//		{
+	//			if (i != j) {
+	//				electricalParticlesList[i]->coulombLaw(electricalParticlesList[j]);
+	//			}
+	//		}
+	//	}
+	//	if (planetMode)
+	//	{
+	//		for (auto& shape : objList) {
+	//			shape->updatePositionEuler(deltaTime);
+	//			shape->draw(window);
+	//		}
+	//	}
+	//	else
+	//	{
+	//		for (auto& shape : objList) {
+	//			shape->updatePositionVerlet(deltaTime);
+	//			shape->draw(window);
+	//		}
+	//	}
+	//}
 };

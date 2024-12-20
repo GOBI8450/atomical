@@ -21,6 +21,16 @@ public:
 		originalScale = getScale();
 	}
 
+	Button(float width, float height, sf::Vector2f pos)
+		: width(width), height(height)
+	{
+		setSize(sf::Vector2f(width, height));
+		setOrigin(width / 2, height / 2);
+		setPosition(pos);
+		originalScale = getScale();
+		name = "";
+	}
+
 	void SetTexture(const sf::Texture& newTexture) {
 		setTexture(&newTexture);
 	}
