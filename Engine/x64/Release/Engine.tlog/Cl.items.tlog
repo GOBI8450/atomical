@@ -8,7 +8,7 @@ C:\Users\ערן\source\repos\PhysicSSimulator\HandleNetworkingClient.cpp;C:\User
 C:\Users\ערן\source\repos\PhysicSSimulator\LineLink.cpp;C:\Users\ערן\source\repos\PhysicSSimulator\Engine\x64\Release\LineLink.obj
 C:\Users\ערן\source\repos\PhysicSSimulator\ObjectsList.cpp;C:\Users\ערן\source\repos\PhysicSSimulator\Engine\x64\Release\ObjectsList.obj
 C:\Users\ערן\source\repos\PhysicSSimulator\Options.cpp;C:\Users\ערן\source\repos\PhysicSSimulator\Engine\x64\Release\Options.obj
-C:\Users\ערן\source\repos\PhysicSSimulator\PhysicsSimulationLocal.cpp;C:\Users\ערן\source\repos\PhysicSSimulator\Engine\x64\Release\PhysicsSimulationLocal.obj
+C:\Users\ערן\source\repos\PhysicSSimulator\SinglePlayer.cpp;C:\Users\ערן\source\repos\PhysicSSimulator\Engine\x64\Release\SinglePlayer.obj
 C:\Users\ערן\source\repos\PhysicSSimulator\PhysicsSimulatotion.cpp;C:\Users\ערן\source\repos\PhysicSSimulator\Engine\x64\Release\PhysicsSimulatotion.obj
 C:\Users\ערן\source\repos\PhysicSSimulator\Planet.cpp;C:\Users\ערן\source\repos\PhysicSSimulator\Engine\x64\Release\Planet.obj
 C:\Users\ערן\source\repos\PhysicSSimulator\Rectangle.cpp;C:\Users\ערן\source\repos\PhysicSSimulator\Engine\x64\Release\Rectangle.obj

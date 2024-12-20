@@ -12,7 +12,7 @@
 #include <ctime>   // For seeding with current time
 #include <boost\asio.hpp>
 #include "PhysicsSimulation.h"
-#include "PhysicsSimulation_Local.h"
+#include "SinglePlayer.h"
 #include "Options.h"
 #include "UI.h"
 
@@ -38,9 +38,10 @@ void toggleFullscreen(sf::RenderWindow& window) {
     window.setVerticalSyncEnabled(true);
 }
 
-void Run(std::string& screen, PhysicsSimulation_SinglePlayer& simulation, MainMenu& mainMenu, Settings& settingsClass, sf::RenderWindow& window) {
+void Run(std::string& screen, SinglePlayer& simulation, MainMenu& mainMenu, Settings& settingsClass, sf::RenderWindow& window) {
     while (window.isOpen()) {
         if (screen == "START") {
+            simulation.SetScreen(screen);
             screen = simulation.Run();
         }
         else if (screen == "MAIN MENU") {
@@ -68,7 +69,7 @@ int main() {
         sf::View view = window.getDefaultView();
         initializeWindow(window, view, settings);
 
-        PhysicsSimulation_SinglePlayer simulation(window);
+        SinglePlayer simulation(window);
         MainMenu mainMenu(window);
         Settings settingsClass(window);
         std::string screen = "START";

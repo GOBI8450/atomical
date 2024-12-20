@@ -61,8 +61,12 @@ public:
 	virtual void updatePositionEuler(float dt) {}
 
 	//If you wanna apply force to the circle:
-	void applyForce(sf::Vector2f force) {
+	void applyOneForce(sf::Vector2f force) {
 		acceleration = sf::Vector2f(force.x / mass, force.y / mass);
+	}
+
+	void addForce(sf::Vector2f force) {
+		acceleration += sf::Vector2f(force.x / mass, force.y / mass);
 	}
 
 	// Set shape color
@@ -112,9 +116,15 @@ public:
 
 	virtual void SetPosition(sf::Vector2f newPos) {}
 
-	void SetVelocity(const sf::Vector2f& newVelocity) { velocity = newVelocity; }
+	void SetVelocity(const sf::Vector2f& newVelocity) { 
+		velocity = newVelocity; 
+		oldPosition = oldPosition - velocity * (1.f / 60.f);
+	}
 
-	void SetVelocity(float x, float y) { velocity = sf::Vector2f(x, y); }
+	void SetVelocity(float x, float y) { 
+		velocity = sf::Vector2f(x, y); 
+		oldPosition = oldPosition - velocity * (1.f / 60.f);
+	}
 
 	sf::Vector2f GetVelocity() const { return velocity; }
 
@@ -155,8 +165,12 @@ public:
 		return "BaseShape";
 	}
 
-	virtual void gdetGlobalBounds() {
-		return;
+	virtual sf::FloatRect GetGlobalBounds() {
+		return sf::FloatRect();
+	}
+
+	virtual float GetEstimatedSize() {
+		return 0;
 	}
 
 	virtual std::string ToString() const {

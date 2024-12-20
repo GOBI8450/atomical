@@ -8,11 +8,10 @@ class Circle :public BaseShape, public sf::CircleShape
 {
 protected:
 	float radius; //float to not be too big
-	sf::Vector2f velocity;
-
 
 public:
-	Circle() :BaseShape(), radius(0.0), velocity((0.0), (0.0)) {}; // must have deffult constructor for networking
+	Circle() : BaseShape(), radius(0.0) {}; // must have deffult constructor for networking
+
 	// Constructor with radius, color, gravity, mass
 	Circle(sf::Color color, float gravity, double mass, float radius, int objCount)
 		: BaseShape(color, gravity, mass, objCount), radius(radius)
@@ -23,7 +22,7 @@ public:
 		setPosition(radius, radius);
 		oldPosition = sf::Vector2f(radius, radius);
 		acceleration = sf::Vector2f(0, gravity * 100); //(x axis, y axis)
-		oldPosition = getPosition() - velocity;
+		oldPosition = oldPosition - velocity * (1.f / 60.f);
 	}
 
 	// Constructor with radius, color, gravity, mass, position
@@ -37,7 +36,7 @@ public:
 		oldPosition = pos;
 		acceleration = sf::Vector2f(0, gravity * 100);//(x axis, y axis)
 		SetVelocity(initialVel);
-		oldPosition = pos - velocity;
+		oldPosition = oldPosition - velocity * (1.f / 60.f);
 		//SetOutline(sf::Color(255, 255, 255), 0.5);  // cool visual
 	}
 
@@ -48,7 +47,7 @@ public:
 		sf::Vector2f newPos = currentPos + (currentPos - oldPosition) + acceleration * (dt * dt);
 
 		// Update velocity
-		velocity = (newPos - currentPos) / dt;
+		velocity = (newPos - oldPosition) / (2 * dt);
 
 		oldPosition = currentPos;
 		setPosition(newPos);
@@ -160,7 +159,7 @@ public:
 				float massRatio = mass / otherCir->mass;
 				// Move circles apart based on the overlap so they will no longer be in contact
 				sf::Vector2f displacement = direction * static_cast<float>(overlap / 2.0f); // Split overlap
-				pos += displacement;  // Move this circle
+				pos += displacement * (1/massRatio);  // Move this circle
 				posOther -= displacement * massRatio; // Move the other circle
 
 				// Update positions
@@ -269,6 +268,14 @@ public:
 			<< velocity.y << ":" << velocity.x;  // Circle-specific property: Velocity
 
 		return ss.str();
+	}
+
+	sf::FloatRect GetGlobalBounds()  override {
+		return getGlobalBounds();
+	}
+
+	float GetEstimatedSize() override {
+		return radius;
 	}
 
 	// Function to draw the circle

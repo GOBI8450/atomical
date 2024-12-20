@@ -164,7 +164,7 @@ boost_asio-vc143-mt-x64-1_86.lib;%(AdditionalDependencies)</AdditionalDependenci
     <ClCompile Include="LineLink.cpp" />
     <ClCompile Include="ObjectsList.cpp" />
     <ClCompile Include="Options.cpp" />
-    <ClCompile Include="PhysicsSimulationLocal.cpp" />
+    <ClCompile Include="SinglePlayer.cpp" />
     <ClCompile Include="PhysicsSimulatotion.cpp" />
     <ClCompile Include="Planet.cpp" />
     <ClCompile Include="Rectangle.cpp" />
@@ -183,7 +183,7 @@ boost_asio-vc143-mt-x64-1_86.lib;%(AdditionalDependencies)</AdditionalDependenci
     <ClInclude Include="LineLink.h" />
     <ClInclude Include="ObjectsList.h" />
     <ClInclude Include="Options.h" />
-    <ClInclude Include="PhysicsSimulation_Local.h" />
+    <ClInclude Include="SinglePlayer.h" />
     <ClInclude Include="PhysicsSimulation.h" />
     <ClInclude Include="Planet.h" />
     <ClInclude Include="Rectangle.h" />
@@ -193,6 +193,13 @@ boost_asio-vc143-mt-x64-1_86.lib;%(AdditionalDependencies)</AdditionalDependenci
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Engine.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="icon1.ico" />
+    <Image Include="icon2.ico" />
+    <Image Include="icon3.ico" />
+    <Image Include="Visuals\logo.ico" />
+    <Image Include="Visuals\logo.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -9,10 +9,9 @@ class RectangleClass : public BaseShape, public sf::RectangleShape
 private:
 	float width;
 	float height;
-	sf::Vector2f velocity;
 
 public:
-	RectangleClass() :BaseShape(), width(0.0), height(0.0), velocity((0.0), (0.0)) {}; // must have deffult constructor for networking
+	RectangleClass() :BaseShape(), width(0.0), height(0.0) {}; // must have deffult constructor for networking
 	// Constructor with radius, color, gravity, mass
 	RectangleClass(float width, float height, sf::Color color, float gravity, double mass, int objCount)
 		: BaseShape(color, gravity, mass, objCount), width(width), height(height)
@@ -316,12 +315,16 @@ public:
 		return ss.str();
 	}
 
-	sf::FloatRect GetGlobalBounds() {
+	sf::FloatRect GetGlobalBounds()  override {
 		return getGlobalBounds();
 	}
 
 	std::string GetType() const override {
 		return "Rectangle";
+	}
+
+	float GetEstimatedSize() override {
+		return std::max(height, width);
 	}
 
 	std::string ToString() const override {

@@ -13,6 +13,6 @@ struct Options {
 	double massLock = 0;
 };
 
-extern Options options;  // Just declare it here
+extern Options options; 
 
 #endif

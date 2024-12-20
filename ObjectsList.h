@@ -248,16 +248,19 @@ public:
 		}
 	}
 
-	void HandleAllCollisions(int window_width, int window_height, float elastic) {
+	void HandleAllCollisions(int window_width, int window_height, float elastic, bool borderless) {
 		if (elastic == 0) { // Verlet integration
 			for (auto& obj : objList) {
-				// Check if obj is a Circle
-				if (Circle* circle = dynamic_cast<Circle*>(obj)) {
-					circle->handleWallCollision(window_width, window_height);
-				}
-				// Check if obj is a Rectangle
-				else if (RectangleClass* rectangle = dynamic_cast<RectangleClass*>(obj)) {
-					rectangle->handleWallCollision(window_width, window_height);
+				if (!borderless)
+				{
+					// Check if obj is a Circle
+					if (Circle* circle = dynamic_cast<Circle*>(obj)) {
+						circle->handleWallCollision(window_width, window_height);
+					}
+					// Check if obj is a Rectangle
+					else if (RectangleClass* rectangle = dynamic_cast<RectangleClass*>(obj)) {
+						rectangle->handleWallCollision(window_width, window_height);
+					}
 				}
 
 				// Get nearby objects for collision handling
@@ -298,13 +301,16 @@ public:
 		}
 		else { // Euler integration
 			for (auto& obj : objList) {
-				// Check if obj is a Circle
-				if (Circle* circle = dynamic_cast<Circle*>(obj)) {
-					circle->handleWallCollision(window_width, window_height);
-				}
-				// Check if obj is a Rectangle
-				else if (RectangleClass* rectangle = dynamic_cast<RectangleClass*>(obj)) {
-					rectangle->handleWallCollision(window_width, window_height);
+				if (!borderless)
+				{
+					// Check if obj is a Circle
+					if (Circle* circle = dynamic_cast<Circle*>(obj)) {
+						circle->handleWallCollision(window_width, window_height);
+					}
+					// Check if obj is a Rectangle
+					else if (RectangleClass* rectangle = dynamic_cast<RectangleClass*>(obj)) {
+						rectangle->handleWallCollision(window_width, window_height);
+					}
 				}
 
 				// Get nearby objects for collision handling
@@ -377,6 +383,16 @@ public:
 		}
 	}
 
+	void ChangeVelocityForAll(sf::Vector2f newVelocity) {
+		for (auto& obj : objList)
+		{
+			if (obj->GetType() == "Circle" || obj->GetType() == "Rectangle")
+			{
+				obj->SetVelocity(newVelocity);
+			}
+		}
+	}
+
 	// In ObjectsList class:
 	int checkIfPointInObjectArea(sf::Vector2f pos) {
 		for (auto& obj : objList) {
@@ -395,6 +411,7 @@ public:
 		}
 		return -1;
 	}
+
 	std::vector<BaseShape> ConvertForSending() {
 		std::vector<BaseShape> objectsVec_NON_POINTER;
 		for (auto& obj : objList)
@@ -403,6 +420,7 @@ public:
 		}
 		return objectsVec_NON_POINTER;
 	}
+
 
 	void DrawObjects(sf::RenderWindow& window, float fps, bool planetMode) {
 		float deltaTime = 1 / fps;
@@ -421,15 +439,15 @@ public:
 	}
 
 	void MoveWhenFreeze(int window_width, int window_height, float fps, bool borderless) {
-		if (borderless)
+		/*if (borderless)
 		{
 			grid = new GridUnorderd();
 		}
 		else
 		{
 			grid = new GridFixed();
-		}
-
+		}*/
+		grid = new GridUnorderd();
 		grid->clear(); // Clear the grid
 
 		for (auto& ball : objList) {
@@ -446,14 +464,15 @@ public:
 	}
 
 	void MoveObjects(int window_width, int window_height, float fps, float elastic, bool planetMode, bool enableCollison, bool borderless) {
-		if (borderless)
-		{
-			grid = new GridUnorderd();
-		}
-		else
-		{
-			grid = new GridFixed();
-		}
+		//if (borderless)
+		//{
+		//	grid = new GridUnorderd();
+		//}
+		//else
+		//{
+		//	grid = new GridFixed();
+		//}
+		grid = new GridUnorderd();
 
 		grid->clear(); // Clear the grid
 
@@ -464,17 +483,17 @@ public:
 		if (fps <= 0) {
 			fps = 60;
 		}
-		float deltaTime = 1 / fps; // Calculate deltaTime for movement
+		float dt = 1 / fps; // Calculate deltaTime for movement
 		if (enableCollison)
 		{
-			HandleAllCollisions(window_width, window_height, elastic);
+			HandleAllCollisions(window_width, window_height, elastic, borderless);
 		}
 		for (int i = 0; i < planetList.size(); i++)
 		{
 			for (auto& ball : objList) {
 				if (typeid(*ball) != typeid(*planetList[i].first))
 				{
-					planetList[i].first->Gravitate(ball);
+					planetList[i].first->Gravitate(ball,dt);
 				}
 			}
 			sf::Vector2f allForces = sf::Vector2f(0, 0);
@@ -483,7 +502,7 @@ public:
 					allForces += planetList[i].first->GravitateAccurate(planetList[j].first);
 				}
 			}
-			planetList[i].first->applyForce(allForces);
+			planetList[i].first->applyOneForce(allForces);
 			addThickLine(planetList[i].second, planetList[i].first->GetOldPosition(), planetList[i].first->GetPosition(), planetList[i].first->GetRadius() / 1.5, planetList[i].first->GetColor());
 			rebuildVertexArray(planetList[i].second, 252);
 			for (int alphaChange = planetList[i].second.getVertexCount() - 4; alphaChange >= 0; alphaChange -= 4)  // Start from last rectangle and move backwards
@@ -512,20 +531,20 @@ public:
 						allForces += electricalParticlesList[i]->coulombLaw(electricalParticlesList[j]);
 					}
 				}
-				electricalParticlesList[i]->applyForce(allForces);
+				electricalParticlesList[i]->applyOneForce(allForces);
 			}
 		}
 		connectedObjects.ApplyAllLinks();
 		if (1==0)
 		{
 			for (auto& ball : objList) {
-				ball->updatePositionEuler(deltaTime);
+				ball->updatePositionEuler(dt);
 			}
 		}
 		else
 		{
 			for (auto& ball : objList) {
-				ball->updatePositionVerlet(deltaTime);
+				ball->updatePositionVerlet(dt);
 			}
 		}
 		for (auto& ball : fixedObjects) {
