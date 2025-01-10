@@ -61,7 +61,7 @@ private:
 
     // Creates a shape object based on its type
     static BaseShape* CreateShapeFromType(const std::string& type) {
-        if (type == "Circle") {
+        if (type == "Circle" || type == "Planet" || type == "ElectPart") {
             return new Circle();
         }
         else if (type == "Rectangle") {
@@ -105,10 +105,17 @@ public:
 
             for (int i = 1; i <= numShapes && i < tokens.size(); i++) {
                 auto shapeData = SplitString(tokens[i], ':');
-                if (shapeData.empty()) continue;
+                if (shapeData.empty() || shapeData.size() != 12) {
+                    std::cout << "corrupted obj" << "\n";
+                    continue;
+                }
+                
 
                 BaseShape* shape = CreateShapeFromType(shapeData[0]);
-                if (!shape) continue;
+                if (!shape) {
+                    std::cout << "corrupted obj - not an object" << "\n";
+                    continue;
+                }
 
                 int currentIndex = 1;
                 int id = std::stoi(shapeData[currentIndex++]);

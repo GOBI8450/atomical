@@ -22,6 +22,7 @@ public:
 		setPosition(width / 2, height / 2);
 		oldPosition = sf::Vector2f(width, height);
 		acceleration = sf::Vector2f(0, gravity * 100); //(x axis, y axis)
+		type = "Rectangle";
 	}
 
 	// Constructor with radius, color, gravity, mass, position
@@ -34,6 +35,7 @@ public:
 		setPosition(pos);
 		oldPosition = pos;
 		acceleration = sf::Vector2f(0, gravity * 100);//(x axis, y axis)
+		type = "Rectangle";
 	}
 
 	// Modify the updatePosition method:
@@ -317,10 +319,6 @@ public:
 
 	sf::FloatRect GetGlobalBounds()  override {
 		return getGlobalBounds();
-	}
-
-	std::string GetType() const override {
-		return "Rectangle";
 	}
 
 	float GetEstimatedSize() override {

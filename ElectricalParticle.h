@@ -38,10 +38,7 @@ public:
 		acceleration = other.acceleration;
 		mass = other.mass;
 		gravity = other.gravity;
-	}
-
-	std::string GetType() const override {
-		return "ElectPart";
+		type = "ElectPart";
 	}
 
 	double GetCharge() {

@@ -16,6 +16,7 @@ protected:
 	double fps;//my worst enemy
 	int linked;
 	int id;
+	std::string type = "BaseShape";
 
 public:
 	static int objectCount;
@@ -28,7 +29,8 @@ public:
 		mass(0.0),
 		fps(0.0),
 		linked(-1),
-		id(-1)
+		id(-1),
+		type("BaseShape")
 	{
 		// This constructor sets default values
 	}
@@ -40,6 +42,7 @@ public:
 		acceleration = sf::Vector2f(0, gravity); //(x axis, y axis)
 		objectCount = objCount;
 		id = objectCount;
+		type = "BaseShape";
 	}
 	// Copy constructor
 	BaseShape(const BaseShape& other)
@@ -49,7 +52,8 @@ public:
 		gravity(other.gravity),
 		mass(other.mass),
 		fps(other.fps),
-		linked(other.linked)
+		linked(other.linked),
+		type("BaseShape")
 	{
 	}
 
@@ -162,7 +166,11 @@ public:
 	}
 
 	virtual std::string GetType() const {
-		return "BaseShape";
+		return type;
+	}
+
+	void SetType(std::string newType) {
+		type = newType;
 	}
 
 	virtual sf::FloatRect GetGlobalBounds() {
@@ -173,7 +181,7 @@ public:
 		return 0;
 	}
 
-	virtual std::string ToString() const {
+	virtual std::string ToString() const { //TODO: Minimaize it. only need to draw it so acceleration and velcoity etc is not needed 
 		std::stringstream ss;
 		sf::Vector2f pos = GetPosition();
 		ss << GetType() << ":"       // Shape type

@@ -412,26 +412,26 @@ public:
 		return -1;
 	}
 
-	std::vector<BaseShape> ConvertForSending() {
-		std::vector<BaseShape> objectsVec_NON_POINTER;
-		for (auto& obj : objList)
-		{
-			objectsVec_NON_POINTER.push_back(*obj);
-		}
-		return objectsVec_NON_POINTER;
-	}
 
+	std::vector<BaseShape*> CombineAllObjects() {
+		std::vector<BaseShape*> combinedObjects;
+		combinedObjects.insert(combinedObjects.end(), objList.begin(), objList.end());
+		combinedObjects.insert(combinedObjects.end(), fixedObjects.begin(), fixedObjects.end());
+		for (auto planet : planetList) {
+			BaseShape* planetPointer = planet.first;
+			combinedObjects.push_back(planetPointer);
+		}
+		for (auto particle : electricalParticlesList) {
+			BaseShape* particlePointer = particle;
+			combinedObjects.push_back(particlePointer);
+		}
+		return combinedObjects;
+	}
 
 	void DrawObjects(sf::RenderWindow& window, float fps, bool planetMode) {
 		float deltaTime = 1 / fps;
 		connectedObjects.Draw(window);
 		//grid->DrawGrids(window);
-		if (planetMode)
-		{
-			for (auto& planet : planetList) {
-				window.draw(planet.second);
-			}
-		}
 		for (auto& ball : objList) {
 			ball->draw(window);
 		}

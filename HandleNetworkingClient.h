@@ -68,6 +68,40 @@ public:
 			});
 	}
 
+	void disconnect_from_server() {
+		// Stop any ongoing retries for connection
+		should_try_connect_ = false;
+		retry_timer_.cancel();
+
+		// Close the TCP socket if its open
+		if (tcp_socket_.is_open()) {
+			boost::system::error_code ec;
+			tcp_socket_.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
+			if (ec) {
+				std::cout << "TCP socket shutdown error: " << ec.message() << std::endl;
+			}
+			tcp_socket_.close(ec);
+			if (ec) {
+				std::cout << "TCP socket close error: " << ec.message() << std::endl;
+			}
+			else {
+				std::cout << "TCP socket disconnected." << std::endl;
+			}
+		}
+
+		// Close the UDP socket if it's open
+		if (udp_socket_.is_open()) {
+			boost::system::error_code ec;
+			udp_socket_.close(ec);
+			if (ec) {
+				std::cout << "UDP socket close error: " << ec.message() << std::endl;
+			}
+			else {
+				std::cout << "UDP socket disconnected." << std::endl;
+			}
+		}
+	}
+
 
 protected:
 	virtual void TranslateMessage(const std::string& message) {}
@@ -87,6 +121,7 @@ protected:
 		std::lock_guard<std::mutex> lock(storedMessagesMutex);
 		storedMessages.clear();
 	}
+
 
 private:
 	void attempt_connect() {
@@ -159,16 +194,21 @@ private:
 						boost::asio::buffers_begin(tcp_buffer_.data()) + length);
 					tcp_buffer_.consume(length);
 
-					/*std::cout << "TCP received: " << message <<"\n";*/
+					// Handle the received message
 					TranslateMessage(message);
-					// Process the received shapes as needed
+
+					// Continue listening for TCP messages
 					start_tcp_receive();
 				}
 				else {
 					std::cout << "TCP receive failed: " << ec.message() << std::endl;
 				}
 			});
+
+		// Send the UDP port to the server
+		send_tcp_message("udp:" + std::to_string(udp_socket_.local_endpoint().port()));
 	}
+
 
 	void start_udp_receive() {
 		udp_socket_.async_receive_from(
@@ -177,16 +217,16 @@ private:
 			[this](const boost::system::error_code& errorCode, std::size_t bytesRecived) {
 				if (!errorCode) {
 					std::string message(udp_data_, bytesRecived);
-					/*std::cout << "UDP received: " << message << std::endl;*/
-					TranslateMessage(message);
-					// Process the received shapes as needed
-					start_udp_receive();
+					TranslateMessage(message); // Process the message
+					start_udp_receive();       // Continue receiving
 				}
 				else {
 					std::cout << "UDP receive failed: " << errorCode.message() << std::endl;
 				}
 			});
 	}
+
+
 
 	boost::asio::io_context& io_context_;
 	tcp::socket tcp_socket_;

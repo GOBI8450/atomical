@@ -47,6 +47,7 @@ protected:
 	bool enableCollison = true;
 	bool borderless = true;
 	bool renderButtonsMenu = true;
+	std::vector<std::pair<sf::Keyboard::Key, std::function<void()>>> keyActions;
 
 	// Physics and simulation parameters
 	float lineLength = 45;
@@ -149,6 +150,7 @@ public:
 		view = window.getDefaultView();  // Initialize view from window
 		initializeCursors();
 		initializeUI();
+		InitializeKeyActions();
 		setupGradient();
 	}
 
@@ -164,6 +166,59 @@ public:
 	}
 
 private:
+	void InitializeKeyActions() {
+		// Populate the key-action vector
+		keyActions.push_back({ sf::Keyboard::Escape, [&]() {
+			screen = "MAIN MENU";
+			objectList.DeleteAll();
+			objCount = 0;
+		} });
+
+		keyActions.push_back({ sf::Keyboard::A, [&]() { AddCirclesInOrder(); } });
+		keyActions.push_back({ sf::Keyboard::T, [&]() { AddRectanglesInOrder(); } });
+		keyActions.push_back({ sf::Keyboard::K, [&]() {
+			createConnectedObjMode = !createConnectedObjMode;
+			previousBallPointer = thisBallPointer;
+		} });
+
+		keyActions.push_back({ sf::Keyboard::X, [&]() { ToggleChainMode(); } });
+		keyActions.push_back({ sf::Keyboard::BackSpace, [&]() {
+			if (leftMouseClickFlag) objectList.DeleteThisObj(thisBallPointer);
+		} });
+
+		keyActions.push_back({ sf::Keyboard::H, [&]() { CreateRandomConnectedCircles(); } });
+		keyActions.push_back({ sf::Keyboard::F11, [&]() { ToggleFullscreen(); } });
+		keyActions.push_back({ sf::Keyboard::L, [&]() { createPlanet(); } });
+		keyActions.push_back({ sf::Keyboard::E, [&]() { createElectricalParticle(particleType); } });
+		keyActions.push_back({ sf::Keyboard::F, [&]() { createExplosionCircles(); } });
+		keyActions.push_back({ sf::Keyboard::J, [&]() { createExplosionRectangles(); } });
+		keyActions.push_back({ sf::Keyboard::R, [&]() { Restart(); } });
+		keyActions.push_back({ sf::Keyboard::S, [&]() {
+			if (leftMouseClickFlag) scaleFlag = true;
+		} });
+
+		keyActions.push_back({ sf::Keyboard::Space, [&]() { ToggleFreeze(); } });
+		keyActions.push_back({ sf::Keyboard::Q, [&]() {
+			objectList.CreateNewFixedCircle(sf::Color(255, 255, 255), currentMousePos);
+			objCount += 1;
+		} });
+
+		keyActions.push_back({ sf::Keyboard::Num1, [&]() { typeOfLink = 1; } });
+		keyActions.push_back({ sf::Keyboard::Num2, [&]() { typeOfLink = 2; } });
+		keyActions.push_back({ sf::Keyboard::Num3, [&]() { particleType = 3; } });
+		keyActions.push_back({ sf::Keyboard::Num4, [&]() { particleType = 4; } });
+		keyActions.push_back({ sf::Keyboard::Num5, [&]() { particleType = 5; } });
+		keyActions.push_back({ sf::Keyboard::Num6, [&]() { enableCollison = !enableCollison; } });
+		keyActions.push_back({ sf::Keyboard::Num7, [&]() { borderless = !borderless; } });
+		keyActions.push_back({ sf::Keyboard::Num0, [&]() { The3BodyProblem(); } });
+
+		keyActions.push_back({ sf::Keyboard::Left, [&]() { view.move(-moveSpeedScreen, 0.f); } });
+		keyActions.push_back({ sf::Keyboard::Right, [&]() { view.move(moveSpeedScreen, 0.f); } });
+		keyActions.push_back({ sf::Keyboard::Up, [&]() { view.move(0.f, -moveSpeedScreen); } });
+		keyActions.push_back({ sf::Keyboard::Down, [&]() { view.move(0.f, moveSpeedScreen); } });
+
+	}
+
 	void handleEventsFromPollEvent(sf::Event event) override {
 		if (event.type == sf::Event::Closed) { window.close(); }
 		handleKeyPress(event);
@@ -183,148 +238,12 @@ private:
 
 	void handleKeyPress(sf::Event event) override {
 		if (event.type == sf::Event::KeyPressed) {
-			if (event.key.code == sf::Keyboard::Escape) {
-				screen = "MAIN MENU";
-				objectList.DeleteAll();
-				objCount = 0;
-			}
-			if (event.key.code == sf::Keyboard::A) {
-				AddCirclesInOrder();
-			}
-			if (event.key.code == sf::Keyboard::T) {
-				AddRectanglesInOrder();
-			}
-			if (event.key.code == sf::Keyboard::K) {
-				createConnectedObjMode = !createConnectedObjMode;
-				previousBallPointer = thisBallPointer;
-			}
-			if (event.key.code == sf::Keyboard::X) {
-				ToggleChainMode();
-			}
-			if (event.key.code == sf::Keyboard::B && (createConnectedObjMode || createChain) && previousBallPointer != nullptr) {
-				if (createChain)
-				{
-					previousBallPointer = objectList.createNewLinkedCircle(previousBallPointer, typeOfLink, options.gravity, gradient[gradientStep], currentMousePos, initialVel);
-				}
-				else
-				{
-					objectList.createNewLinkedCircle(previousBallPointer, typeOfLink, options.gravity, gradient[gradientStep], currentMousePos, initialVel);
-				}
-				objCount += 1;
-			}
-			if (event.key.code == sf::Keyboard::BackSpace && leftMouseClickFlag) {
-				objectList.DeleteThisObj(thisBallPointer);
-			}
-			if (event.key.code == sf::Keyboard::H) {
-				for (size_t i = 0; i < 1; i++)
-				{
-					BaseShape* newObject = objectList.CreateNewCircle(options.gravity, gradient[gradientStep], currentMousePos, initialVel);
-					objCount += 1;
-					objectList.connectedObjects.AddObject(newObject);
-					objectList.connectedObjects.ConnectRandom(10, typeOfLink);
+			for (const auto& [key, action] : keyActions) {
+				if (event.key.code == key) {
+					action(); // Execute the lambda function for the key
+					break;   // Exit once found the event
 				}
 			}
-			if (event.key.code == sf::Keyboard::F11)
-			{
-				if (!options.fullscreen)
-				{
-					window.create(options.desktopSize, "Fullscreen Mode", sf::Style::Fullscreen);
-					options.fullscreen = true;
-				}
-				else {
-					window.create(sf::VideoMode(1920, 980), "Tomy Mode", sf::Style::Default);
-					options.fullscreen = false;
-				}
-			}
-			if (event.key.code == sf::Keyboard::L) {
-				createPlanet();
-			}
-			if (event.key.code == sf::Keyboard::E) {
-				createElectricalParticle(particleType);
-			}
-			if (event.key.code == sf::Keyboard::F) {
-				objectList.CreateNewCircle(options.gravity, explosion, sf::Vector2f(currentMousePos.x + 3, currentMousePos.y + 3), initialVel);
-				for (size_t i = 0; i < 50; i++)
-				{
-					objectList.CreateNewCircle(options.gravity, explosion, currentMousePos, initialVel);
-					objCount += 1;
-				}
-			}
-			if (event.key.code == sf::Keyboard::J) {
-				sf::Vector2i mousePos = sf::Mouse::getPosition(window);
-				objectList.CreateNewRectangle(options.gravity, explosion, sf::Vector2f(currentMousePos.x + 3, currentMousePos.y + 3));
-				for (size_t i = 0; i < 50; i++)
-				{
-					objectList.CreateNewRectangle(options.gravity, explosion, currentMousePos);
-					objCount += 1;
-				}
-			}
-			if (event.key.code == sf::Keyboard::R) {
-				Restart();
-			}
-			if (event.key.code == sf::Keyboard::S && leftMouseClickFlag)
-			{
-				scaleFlag = true;
-			}
-			if (event.key.code == sf::Keyboard::Space)
-			{
-				if (!freeze)
-				{
-					options.gravity = 0;
-					objectList.ChangeGravityForAll(options.gravity);
-					freeze = true;
-				}
-				else
-				{
-					freeze = false;
-					options.gravity = oldGravity;
-					objectList.ChangeGravityForAll(oldGravity);
-				}
-			}
-			if (event.key.code == sf::Keyboard::Q) {
-				objectList.CreateNewFixedCircle(sf::Color(255, 255, 255), currentMousePos);
-				objCount += 1;
-			}
-			if (event.key.code == sf::Keyboard::Num1)
-			{
-				typeOfLink = 1;
-			}
-			if (event.key.code == sf::Keyboard::Num2)
-			{
-				typeOfLink = 2;
-			}
-			if (event.key.code == sf::Keyboard::Num3)
-			{
-				particleType = 3;
-			}
-			if (event.key.code == sf::Keyboard::Num4)
-			{
-				particleType = 4;
-			}
-			if (event.key.code == sf::Keyboard::Num5)
-			{
-				particleType = 5;
-			}
-			if (event.key.code == sf::Keyboard::Num6)
-			{
-				enableCollison = !enableCollison;
-			}
-			if (event.key.code == sf::Keyboard::Num7)
-			{
-				borderless = !borderless;
-			}
-			if (event.key.code == sf::Keyboard::Num0)
-			{
-				The3BodyProblem();
-			}
-			if (event.key.code == sf::Keyboard::Left)
-				view.move(-moveSpeedScreen, 0.f);
-			if (event.key.code == sf::Keyboard::Right)
-				view.move(moveSpeedScreen, 0.f);
-			if (event.key.code == sf::Keyboard::Up)
-				view.move(0.f, -moveSpeedScreen);
-			if (event.key.code == sf::Keyboard::Down)
-				view.move(0.f, moveSpeedScreen);
 		}
 	}
 
@@ -497,6 +416,18 @@ private:
 		previousBallPointer = thisBallPointer;
 	}
 
+	void ToggleFullscreen() {
+		if (!options.fullscreen)
+		{
+			window.create(options.desktopSize, "Fullscreen Mode", sf::Style::Fullscreen);
+			options.fullscreen = true;
+		}
+		else {
+			window.create(sf::VideoMode(1920, 980), "Tomy Mode", sf::Style::Default);
+			options.fullscreen = false;
+		}
+	}
+
 	void Restart() {
 		objectList.DeleteAll();
 		objCount = 0;
@@ -556,6 +487,28 @@ private:
 			objectList.CreateNewElectricalParticle(-PROTON_CHARGE * muliplier, false, sf::Vector2f(0, 0), electron_color, currentMousePos, 20, PROTON_MASS * muliplier); //TODO: when interacting with objects do that the mass is appropriate or else super high speed
 		}
 		objCount++;
+	}
+
+	void CreateRandomConnectedCircles() {
+		BaseShape* newObject = objectList.CreateNewCircle(options.gravity, gradient[gradientStep], currentMousePos, initialVel);
+		objCount += 1;
+		objectList.connectedObjects.AddObject(newObject);
+		objectList.connectedObjects.ConnectRandom(10, typeOfLink);
+	}
+
+	void ToggleFreeze() {
+		if (!freeze)
+		{
+			options.gravity = 0;
+			objectList.ChangeGravityForAll(options.gravity);
+			freeze = true;
+		}
+		else
+		{
+			freeze = false;
+			options.gravity = oldGravity;
+			objectList.ChangeGravityForAll(oldGravity);
+		}
 	}
 
 	void handleScaling() override {

@@ -23,6 +23,7 @@ public:
 		oldPosition = sf::Vector2f(radius, radius);
 		acceleration = sf::Vector2f(0, gravity * 100); //(x axis, y axis)
 		oldPosition = oldPosition - velocity * (1.f / 60.f);
+		type = "Circle";
 	}
 
 	// Constructor with radius, color, gravity, mass, position
@@ -38,6 +39,7 @@ public:
 		SetVelocity(initialVel);
 		oldPosition = oldPosition - velocity * (1.f / 60.f);
 		//SetOutline(sf::Color(255, 255, 255), 0.5);  // cool visual
+		type = "Circle";
 	}
 
 	//update the position based on verlet integration.
@@ -253,10 +255,6 @@ public:
 	void SetOutline(sf::Color color, float thickness) override {
 		setOutlineThickness(thickness);
 		setOutlineColor(color);
-	}
-
-	std::string GetType() const override {
-		return "Circle";
 	}
 
 	std::string ToString() const override {
