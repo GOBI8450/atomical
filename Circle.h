@@ -55,6 +55,7 @@ public:
 		setPosition(newPos);
 	}
 
+
 	//update the position based on euler integration.
 	void updatePositionEuler(float dt) override
 	{
@@ -153,16 +154,26 @@ public:
 			double overlap = (radius + otherCir->radius) - distance;
 
 			if (overlap > 0) {
-				sf::Vector2f direction = pos - posOther;//The direction vector, between center points of the circles
+				sf::Vector2f direction = pos - posOther; // The direction vector, between center points of the circles
 				float length = sqrt(direction.x * direction.x + direction.y * direction.y); // The length between the circles in scalar
-				if (length > 0) { //if there is any length between them we should devide the direction by the length so it will give only the direction, like you dont say go right 5km you say go right.
+
+				if (length > 0) {
 					direction /= length; // Normalize the direction vector
 				}
+
+				// Calculate mass ratio (more influence for the heavier object)
 				float massRatio = mass / otherCir->mass;
-				// Move circles apart based on the overlap so they will no longer be in contact
+
+				// Adjust displacement calculation to account for both sizes more precisely
 				sf::Vector2f displacement = direction * static_cast<float>(overlap / 2.0f); // Split overlap
-				pos += displacement * (1/massRatio);  // Move this circle
+				pos += displacement * (1 / massRatio);  // Move this circle
 				posOther -= displacement * massRatio; // Move the other circle
+
+				// Ensure small circles aren't just being "ignored"
+				if (radius < 1.0f || otherCir->radius < 1.0f) {
+					// For very small circles, adjust the threshold for how much they can move
+					displacement *= 0.5f; // You can tweak this factor based on your desired behavior
+				}
 
 				// Update positions
 				setPosition(pos);
@@ -170,6 +181,7 @@ public:
 			}
 		}
 	}
+
 
 	//handeling collision with euler integretion, using momentum equations
 	void HandleCollisionElastic(Circle* otherCir, float elastic) {

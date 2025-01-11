@@ -9,7 +9,7 @@ struct Options {
 	int window_height = desktopSize.height;
 	int window_width = desktopSize.width;
 	bool fullscreen = false;
-	float gravity = 0;
+	float gravity = 9.8;
 	double massLock = 0;
 };
 

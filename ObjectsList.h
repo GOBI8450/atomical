@@ -47,11 +47,11 @@ public:
 	}
 
 	BaseShape* CreateNewCircle(float gravity, sf::Color color, sf::Vector2f pos, sf::Vector2f initialVel) {
-		std::uniform_int_distribution<int> radiusRange(20, 20);
+		std::uniform_int_distribution<int> radiusRange(5, 5);
 
 		sf::Vector2f position(pos);
 		int randomRadius = radiusRange(rnd);
-		int mass = randomRadius * 3;//no real meaning for the multiply
+		int mass = 1;//no real meaning for the multiply
 		objCount += 1;
 		BaseShape* ball = new Circle(randomRadius, color, position, gravity, mass, initialVel, objCount);
 		objList.push_back(ball); // Pushing back the BaseShape* into the vector
@@ -432,6 +432,12 @@ public:
 		float deltaTime = 1 / fps;
 		connectedObjects.Draw(window);
 		//grid->DrawGrids(window);
+		if (planetMode)
+		{
+			for (auto& planet : planetList) {
+				window.draw(planet.second);
+			}
+		}
 		for (auto& ball : objList) {
 			ball->draw(window);
 		}
@@ -535,79 +541,12 @@ public:
 			}
 		}
 		connectedObjects.ApplyAllLinks();
-		if (1==0)
-		{
-			for (auto& ball : objList) {
-				ball->updatePositionEuler(dt);
-			}
-		}
-		else
-		{
-			for (auto& ball : objList) {
-				ball->updatePositionVerlet(dt);
-			}
+		for (auto& ball : objList) {
+			ball->updatePositionVerlet(dt);
 		}
 		for (auto& ball : fixedObjects) {
 			ball->SetPosition(ball->GetOldPosition());
 			ball->SetAcceleration(sf::Vector2f(0, 0));
 		}
 	}
-
-	//Move And draw:
-	//void MoveAndDraw(sf::RenderWindow& window, float fps, float elastic, bool planetMode, bool enableCollison, bool borderless) {
-	//	if (borderless)
-	//	{
-	//		grid = new GridUnorderd();
-	//	}
-	//	else
-	//	{
-	//		grid = new GridFixed();
-	//	}
-	//	grid->clear(); // Clear the grid
-	//	for (auto& ball : objList) {
-	//		grid->InsertObj(ball); // Inserting BaseShape* objects
-	//	}
-	//	if (fps <= 0) {
-	//		fps = 60;
-	//	}
-	//	float deltaTime = 1 / fps; // Calculate deltaTime for movement
-	//	if (enableCollison)
-	//	{
-	//		HandleAllCollisions(window.getSize().x, window.getSize().y, elastic);
-	//	}
-	//	for (auto& planet : planetList)
-	//	{
-	//		for (auto& ball : objList) {
-	//			if (typeid(*ball) != typeid(*planet.first))
-	//			{
-	//				planet.first->Gravitate(ball);
-	//			}
-	//		}
-	//	}
-	//	connectedObjects.Draw(window);
-	//	//grid->DrawGrids(window);
-	//	for (int i = 0; i < electricalParticlesList.size(); i++)
-	//	{
-	//		for (int j = 0; j < electricalParticlesList.size(); j++)
-	//		{
-	//			if (i != j) {
-	//				electricalParticlesList[i]->coulombLaw(electricalParticlesList[j]);
-	//			}
-	//		}
-	//	}
-	//	if (planetMode)
-	//	{
-	//		for (auto& shape : objList) {
-	//			shape->updatePositionEuler(deltaTime);
-	//			shape->draw(window);
-	//		}
-	//	}
-	//	else
-	//	{
-	//		for (auto& shape : objList) {
-	//			shape->updatePositionVerlet(deltaTime);
-	//			shape->draw(window);
-	//		}
-	//	}
-	//}
 };

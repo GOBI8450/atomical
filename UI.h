@@ -57,7 +57,7 @@ public:
     }
 
     void setupButtons() {
-        headerText = sf::RectangleShape(sf::Vector2f(1212 / headerTextureResizer, 80 / headerTextureResizer));
+        headerText = sf::RectangleShape(sf::Vector2f(922 / headerTextureResizer, 240 / headerTextureResizer));
         headerText.setOrigin(headerText.getSize().x / 2, headerText.getSize().y / 2);
         headerText.setPosition(options.window_width / 2, options.window_height / 2 - 350);
         headerText.setTexture(&mainMenuHeaderTexture);

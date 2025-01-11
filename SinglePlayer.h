@@ -45,7 +45,7 @@ protected:
 	bool createChain = false;
 	bool planetMode = false;
 	bool enableCollison = true;
-	bool borderless = true;
+	bool borderless = false;
 	bool renderButtonsMenu = true;
 	std::vector<std::pair<sf::Keyboard::Key, std::function<void()>>> keyActions;
 
