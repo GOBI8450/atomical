@@ -1,0 +1,15 @@
+[
+  {
+    "Name": "New Profile",
+    "Projects": [
+      {
+        "Path": "PhysicSSimulator.vcxproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "..\\Netwroking\\Netwroking.vcxproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]

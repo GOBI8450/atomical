@@ -658,25 +658,25 @@ private:
 		// Since no textures are used in the original code, this method is kept minimal
 		// but provides a hook for future texture loading if needed
 		try {
-			if (!addButtonTexture.loadFromFile("C:/Users/ערן/Pictures/Visuals/Buttons/AddButton.png")) {
+			if (!addButtonTexture.loadFromFile("Visuals/Buttons/AddButton.png")) {
 				throw std::runtime_error("Failed to load texture");
 			}
-			if (!planetButtonTexture.loadFromFile("C:/Users/ערן/Pictures/Visuals/Buttons/PlanetButton.png")) {
+			if (!planetButtonTexture.loadFromFile("Visuals/Buttons/PlanetButton.png")) {
 				throw std::runtime_error("Failed to load texture");
 			}
-			if (!trashButtonTexture.loadFromFile("C:/Users/ערן/Pictures/Visuals/Buttons/TrashButton.png")) {
+			if (!trashButtonTexture.loadFromFile("Visuals/Buttons/TrashButton.png")) {
 				throw std::runtime_error("Failed to load texture");
 			}
-			if (!connectButtonTexture.loadFromFile("C:/Users/ערן/Pictures/Visuals/Buttons/ConnectButton.png")) {
+			if (!connectButtonTexture.loadFromFile("Visuals/Buttons/ConnectButton.png")) {
 				throw std::runtime_error("Failed to load texture");
 			}
-			if (!chainButtonTexture.loadFromFile("C:/Users/ערן/Pictures/Visuals/Buttons/ChainButton.png")) {
+			if (!chainButtonTexture.loadFromFile("Visuals/Buttons/ChainButton.png")) {
 				throw std::runtime_error("Failed to load texture");
 			}
-			if (!paticleButtonTexture.loadFromFile("C:/Users/ערן/Pictures/Visuals/Buttons/ParticleButton.png")) {
+			if (!paticleButtonTexture.loadFromFile("Visuals/Buttons/ParticleButton.png")) {
 				throw std::runtime_error("Failed to load texture");
 			}
-			if (!explosionButtonTexture.loadFromFile("C:/Users/ערן/Pictures/Visuals/Buttons/ExplosionButton.png")) {
+			if (!explosionButtonTexture.loadFromFile("Visuals/Buttons/ExplosionButton.png")) {
 				throw std::runtime_error("Failed to load texture");
 			}
 			addButtonTexture.setSmooth(true);
