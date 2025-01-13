@@ -21,6 +21,9 @@ Thumbs.db
 *.exe
 *.out
 *.app
+*.tlog
+*.ipdb
+*.iobj
 
 # Ignore CMake generated files
 CMakeFiles/
