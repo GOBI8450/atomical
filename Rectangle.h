@@ -51,7 +51,7 @@ public:
 
 	// Modify the updatePosition method:
 	//update the position based on verlet integration.
-	void updatePositionVerlet(float dt) override
+	void updatePosition_SubSteps(float dt, int numSubsteps) override
 	{
 		sf::Vector2f currentPos = getPosition();
 		sf::Vector2f newPos = currentPos + (currentPos - oldPosition) + acceleration * (dt * dt);
@@ -73,17 +73,20 @@ public:
 		torque = 0.0f;
 	}
 
-	//update the position based on euler integration.
-	void updatePositionEuler(float dt) override
+
+	//update the position based on verlet integration.
+	void updatePosition(float dt) override
 	{
-		sf::Vector2f currentPos = GetPosition();
-		sf::Vector2f newPos = currentPos + velocity * dt + (acceleration * (dt * dt * 0.5f));
+		sf::Vector2f currentPos = getPosition();
+		sf::Vector2f newPos = currentPos + (currentPos - oldPosition) + acceleration * (dt * dt);
+
+		// Update velocity
+		velocity = (newPos - oldPosition) / (2 * dt);
+
 		oldPosition = currentPos;
 		setPosition(newPos);
-
-		// Update velocity for the next frame
-		velocity = (newPos - currentPos) / dt;
 	}
+
 
 	// Set shape color
 	void setColor(sf::Color newColor) override

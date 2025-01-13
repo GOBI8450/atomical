@@ -54,7 +54,7 @@ public:
 			fixedConnections[obj1].emplace_back(obj2, angle, thisLineLength);
 			fixedConnections[obj2].emplace_back(obj1, angle + 180.0f, thisLineLength); // Add 180 degrees for reverse direction
 		}
-		else if (type == 2) { // Non-fixed connection
+		else if (type == 2) { // Non fixed connection
 			nonFixedConnections[obj1].push_back(obj2);
 			nonFixedConnections[obj2].push_back(obj1);
 		}
@@ -92,7 +92,7 @@ public:
 			int index2;
 			do {
 				index2 = dist(rng);
-			} while (index2 == index1); // Ensure we don't connect an object to itself
+			} while (index2 == index1); // make sure we don't connect an object to itself
 
 			BaseShape* obj1 = allObjects[index1];
 			BaseShape* obj2 = allObjects[index2];
@@ -100,7 +100,7 @@ public:
 			auto & connections = fixedConnections[obj1];
 			auto it = std::find_if(connections.begin(), connections.end(),
 				[obj2](const auto& tuple) {
-					return std::get<0>(tuple) == obj2; // Compare only the BaseShape* part
+					return std::get<0>(tuple) == obj2;
 				});
 
 			if (it == connections.end()) {
@@ -119,7 +119,7 @@ public:
 		sf::Vector2f normalizedVector = vector / vectorLength;
 		float deltaLength = vectorLength - lineLength;
 		// Limit the maximum correction to prevent extreme movements
-		float maxCorrection = 50.f; // Adjust this value as needed
+		float maxCorrection = 50.f; // I need to adjust this value
 		float correctionMagnitude = std::min(std::abs(deltaLength * 0.5f), maxCorrection);
 		// Calculate correction vector component-wise
 		sf::Vector2f correction(
@@ -150,10 +150,10 @@ public:
 		// Normalize the current vector
 		sf::Vector2f normalizedVector = vector / currentLength;
 
-		// Calculate current angle (in radians)
+		// Calculate current angle in radians
 		float currentAngle = std::atan2(vector.y, vector.x);
 
-		// Convert fixed angle to radians if it's in degrees
+		// Convert fixed angle to radians if its in degrees
 		float targetAngleRad = fixedAngle * (PI / 180.0f);
 
 		// Calculate angle difference
@@ -182,7 +182,7 @@ public:
 		}
 
 		// Apply position correction with increased damping
-		float positionDamping = 0.3f; // Reduced from 0.5f for more stability
+		float positionDamping = 0.3f;
 
 		// Split correction between both objects
 		sf::Vector2f obj1Correction = -correction * (positionDamping * 0.5f);
@@ -193,8 +193,8 @@ public:
 		obj2->SetPosition(obj2->GetPosition() + obj2Correction);
 
 		// Apply gentler rotational forces
-		float angularForce = angleDiff * 0.05f; // Reduced from 0.1f
-		float forceMagnitude = 0.05f; // Reduced from 0.1f
+		float angularForce = angleDiff * 0.05f; 
+		float forceMagnitude = 0.05f;
 
 		// Calculate perpendicular force vectors
 		sf::Vector2f tangent(-normalizedVector.y, normalizedVector.x);
@@ -207,7 +207,7 @@ public:
 	}
 
 	void ApplyAllLinks() {
-		// Apply non-fixed connections
+		// Apply non fixed connections
 		for (const auto& pair : nonFixedConnections) {
 			BaseShape* obj1 = pair.first;
 			for (BaseShape* obj2 : pair.second) {

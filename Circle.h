@@ -43,7 +43,17 @@ public:
 	}
 
 	//update the position based on verlet integration.
-	void updatePositionVerlet(float dt) override
+	void updatePosition_SubSteps(float dt, int subSteps) override{
+		const float subDt = dt / subSteps;
+		for (int i = subSteps; i > 0; i--)
+		{
+			updatePosition(subDt);
+		}
+	}
+
+
+	//update the position based on verlet integration.
+	void updatePosition(float dt) override
 	{
 		sf::Vector2f currentPos = getPosition();
 		sf::Vector2f newPos = currentPos + (currentPos - oldPosition) + acceleration * (dt * dt);
@@ -55,16 +65,6 @@ public:
 		setPosition(newPos);
 	}
 
-
-	//update the position based on euler integration.
-	void updatePositionEuler(float dt) override
-	{
-		sf::Vector2f currentPos = GetPosition();
-		sf::Vector2f newPos = currentPos + velocity * dt;
-		setPosition(newPos);
-		// Update velocity for the next frame
-		velocity = velocity + acceleration * dt;
-	}
 
 	//Function that handles the walls collisons:
 	void handleWallCollision(int window_width, int window_height)
@@ -143,45 +143,75 @@ public:
 	}
 
 	//The collision handeling is done by seperating the two circles with a vector between the two of them, and the overlap of them. the speed that will be created is done by verlet integretion
-	void HandleCollision(Circle* otherCir) {
+	void HandleCollision(Circle* otherCir, float dt, int subSteps ) {
+		float subDt = dt / subSteps;
+
 		if (IsCollision(otherCir)) {
-			// Get positions of both circles
 			sf::Vector2f pos = GetPosition();
 			sf::Vector2f posOther = otherCir->GetPosition();
 
-			// Calculate the distance and overlap
 			double distance = DistanceOnly(otherCir);
 			double overlap = (radius + otherCir->radius) - distance;
 
 			if (overlap > 0) {
-				sf::Vector2f direction = pos - posOther; // The direction vector, between center points of the circles
-				float length = sqrt(direction.x * direction.x + direction.y * direction.y); // The length between the circles in scalar
+				sf::Vector2f direction = pos - posOther;
+				float length = sqrt(direction.x * direction.x + direction.y * direction.y);
 
 				if (length > 0) {
-					direction /= length; // Normalize the direction vector
+					direction /= length;
+					float massRatio = mass / otherCir->mass;
+
+					// Scale displacement by substep time
+					sf::Vector2f displacement = direction * static_cast<float>(overlap / (2.0f * subSteps));
+
+					// Apply scaled displacement
+					pos += displacement * (1 / massRatio);
+					posOther -= displacement * massRatio;
+
+					setPosition(pos);
+					otherCir->setPosition(posOther);
 				}
-
-				// Calculate mass ratio (more influence for the heavier object)
-				float massRatio = mass / otherCir->mass;
-
-				// Adjust displacement calculation to account for both sizes more precisely
-				sf::Vector2f displacement = direction * static_cast<float>(overlap / 2.0f); // Split overlap
-				pos += displacement * (1 / massRatio);  // Move this circle
-				posOther -= displacement * massRatio; // Move the other circle
-
-				// Ensure small circles aren't just being "ignored"
-				if (radius < 1.0f || otherCir->radius < 1.0f) {
-					// For very small circles, adjust the threshold for how much they can move
-					displacement *= 0.5f; // You can tweak this factor based on your desired behavior
-				}
-
-				// Update positions
-				setPosition(pos);
-				otherCir->setPosition(posOther);
 			}
 		}
 	}
 
+	//handeling collision with euler integretion, using momentum equations
+	void HandleCollisionElastic(Circle* otherCir, float elastic, float dt, int subSteps ) {
+		float subDt = dt / subSteps;
+
+		if (IsCollision(otherCir)) {
+			sf::Vector2f pos = GetPosition();
+			sf::Vector2f posOther = otherCir->GetPosition();
+
+			sf::Vector2f normal = pos - posOther;
+			float distance = std::sqrt(normal.x * normal.x + normal.y * normal.y);
+			normal /= distance;
+
+			// Scale velocities for substep
+			sf::Vector2f velocity = (pos - oldPosition) / subDt;
+			sf::Vector2f velocityOther = (posOther - otherCir->oldPosition) / subDt;
+			sf::Vector2f relativeVelocity = velocity - velocityOther;
+
+			float impulseScalar = -(1 + elastic) * (relativeVelocity.x * normal.x + relativeVelocity.y * normal.y) /
+				(1 / mass + 1 / otherCir->mass);
+
+			sf::Vector2f impulse = normal * impulseScalar;
+			sf::Vector2f newVelocity = velocity + (impulse / static_cast<float>(mass));
+			sf::Vector2f newVelocityOther = velocityOther - (impulse / static_cast<float>(otherCir->mass));
+
+			// Scale position updates by substep time
+			oldPosition = pos;
+			otherCir->oldPosition = posOther;
+			setPosition(pos + newVelocity * subDt);
+			otherCir->setPosition(posOther + newVelocityOther * subDt);
+
+			// Handle separation with substep scaling
+			float overlap = (radius + otherCir->radius) - distance;
+			sf::Vector2f separation = normal * (overlap / (2.0f * subSteps));
+			setPosition(GetPosition() + separation);
+			otherCir->setPosition(otherCir->GetPosition() - separation);
+		}
+	}
 
 	//handeling collision with euler integretion, using momentum equations
 	void HandleCollisionElastic(Circle* otherCir, float elastic) {

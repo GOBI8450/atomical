@@ -11,7 +11,6 @@
 #include <thread>
 #include <functional>
 #include <atomic>
-#include "ThreadPool.h" // Include the ThreadPool header
 
 class ObjectsList
 {
@@ -23,6 +22,7 @@ private:
 	std::vector<ElectricalParticle*> electricalParticlesList;
 	float lineLength;
 	std::vector<BaseShape*> fixedObjects;
+	int subSteps = 1;
 
 public:
 	LineLink connectedObjects = LineLink(lineLength);
@@ -47,7 +47,7 @@ public:
 	}
 
 	BaseShape* CreateNewCircle(float gravity, sf::Color color, sf::Vector2f pos, sf::Vector2f initialVel) {
-		std::uniform_int_distribution<int> radiusRange(5, 5);
+		std::uniform_int_distribution<int> radiusRange(20, 20);
 
 		sf::Vector2f position(pos);
 		int randomRadius = radiusRange(rnd);
@@ -130,13 +130,13 @@ public:
 	}
 
 	void CreateNewRectangle(float gravity, sf::Color color, sf::Vector2f pos) {
-		std::uniform_int_distribution<int> heightRange(50, 50);
-		std::uniform_int_distribution<int> widthRange(50, 50);
+		std::uniform_int_distribution<int> heightRange(20, 20);
+		std::uniform_int_distribution<int> widthRange(20, 20);
 		std::uniform_int_distribution<int> rndXRange(300, 500);  // Replace 920 with actual window width
 		// std::uniform_int_distribution<int> rndYRange(50, 1280 - 50); // Replace 1280 with actual window height
 		int randomHeight = heightRange(rnd);
 		int randomWidth = widthRange(rnd);
-		int mass = (randomWidth + randomHeight) * 2;//no real meaning for the multiply
+		int mass = 1;//no real meaning for the multiply
 		sf::Vector2f position(pos);
 
 		BaseShape* ball = new RectangleClass(randomWidth, randomHeight, color, position, gravity, mass, objCount);
@@ -156,99 +156,9 @@ public:
 		return objList[objCount - 1];
 	}
 
-	void HandleCollisionsInRange(int window_width, int window_height, float elastic, std::vector<std::vector<BaseShape*>> vecOfVecObj) {
-		if (elastic == 0) { // Verlet integration
-			for (auto& vecObj : vecOfVecObj) {
-				for (auto& obj : vecObj) {
-					// Check if obj is a Circle
-					if (Circle* circle = dynamic_cast<Circle*>(obj)) {
-						circle->handleWallCollision(window_width, window_height);
-					}
-					// Check if obj is a Rectangle
-					else if (RectangleClass* rectangle = dynamic_cast<RectangleClass*>(obj)) {
-						rectangle->handleWallCollision(window_width, window_height);
-					}
 
-					// Get nearby objects for collision handling
-					std::vector<BaseShape*> potentialCollisions = grid->GetNerbyCellsObjects(obj);
-
-					for (auto& otherObj : potentialCollisions) {
-						// Handle Circle to Circle collision
-						if (Circle* circle = dynamic_cast<Circle*>(obj)) {
-							if (Circle* otherCircle = dynamic_cast<Circle*>(otherObj)) {
-								if (circle != otherCircle) {
-									circle->HandleCollision(otherCircle);
-								}
-							}
-						}
-						// Handle Rectangle to other object collision
-						else if (RectangleClass* rectangle = dynamic_cast<RectangleClass*>(obj)) {
-							if (RectangleClass* otherRectangle = dynamic_cast<RectangleClass*>(otherObj))
-							{
-								if (rectangle != otherRectangle) {
-									rectangle->HandleCollision(otherRectangle); // Handle collision with any other shape
-								}
-							}
-						}
-						if (RectangleClass* rectangle = dynamic_cast<RectangleClass*>(obj)) {
-							if (Circle* otherCircle = dynamic_cast<Circle*>(otherObj))
-							{
-								rectangle->HandleCollision(otherCircle); // Handle collision with any other shape
-							}
-							std::cout << "recCir";
-						}
-						else if (Circle* otherCircle = dynamic_cast<Circle*>(otherObj)) {
-							if (RectangleClass* rectangle = dynamic_cast<RectangleClass*>(obj))
-							{
-								rectangle->HandleCollision(otherCircle); // Handle collision with any other shape
-							}
-							std::cout << "recCir";
-						}
-					}
-				}
-			}
-		}
-		else { // Euler integration
-			for (auto& vecObj : vecOfVecObj) {
-				for (auto& obj : vecObj) {
-					// Check if obj is a Circle
-					if (Circle* circle = dynamic_cast<Circle*>(obj)) {
-						circle->handleWallCollision(window_width, window_height);
-					}
-					// Check if obj is a Rectangle
-					else if (RectangleClass* rectangle = dynamic_cast<RectangleClass*>(obj)) {
-						rectangle->handleWallCollision(window_width, window_height);
-					}
-
-					// Get nearby objects for collision handling
-					std::vector<BaseShape*> potentialCollisions = grid->GetNerbyCellsObjects(obj);
-
-					for (auto& otherObj : potentialCollisions) {
-						// Handle Circle to Circle collision
-						if (Circle* circle = dynamic_cast<Circle*>(obj)) {
-							if (Circle* otherCircle = dynamic_cast<Circle*>(otherObj)) {
-								if (circle != otherCircle) {
-									circle->HandleCollisionElastic(otherCircle, elastic);
-								}
-							}
-						}
-						// Handle Rectangle to other object collision
-						else if (RectangleClass* rectangle = dynamic_cast<RectangleClass*>(obj)) {
-							if (RectangleClass* otherRectangle = dynamic_cast<RectangleClass*>(otherObj))
-							{
-								if (rectangle != otherRectangle) {
-									rectangle->HandleCollisionElastic(otherRectangle, elastic); // Handle collision with any other shape
-								}
-							}
-
-						}
-					}
-				}
-			}
-		}
-	}
-
-	void HandleAllCollisions(int window_width, int window_height, float elastic, bool borderless) {
+	void HandleAllCollisions(int window_width, int window_height, float elastic, bool borderless, float fps) {
+		float dt = 1 / fps;
 		if (elastic == 0) { // Verlet integration
 			for (auto& obj : objList) {
 				if (!borderless)
@@ -271,7 +181,7 @@ public:
 					if (Circle* circle = dynamic_cast<Circle*>(obj)) {
 						if (Circle* otherCircle = dynamic_cast<Circle*>(otherObj)) {
 							if (circle != otherCircle) {
-								circle->HandleCollision(otherCircle);
+								circle->HandleCollision(otherCircle, dt, subSteps);
 							}
 						}
 					}
@@ -489,17 +399,20 @@ public:
 		if (fps <= 0) {
 			fps = 60;
 		}
+
 		float dt = 1 / fps; // Calculate deltaTime for movement
+
 		if (enableCollison)
 		{
-			HandleAllCollisions(window_width, window_height, elastic, borderless);
+			HandleAllCollisions(window_width, window_height, elastic, borderless, fps);
 		}
+
 		for (int i = 0; i < planetList.size(); i++)
 		{
 			for (auto& ball : objList) {
 				if (typeid(*ball) != typeid(*planetList[i].first))
 				{
-					planetList[i].first->Gravitate(ball,dt);
+					planetList[i].first->Gravitate(ball, dt);
 				}
 			}
 			sf::Vector2f allForces = sf::Vector2f(0, 0);
@@ -526,6 +439,7 @@ public:
 			}
 			//planetList[i].first->SetOldPosition(planetList[i].first->GetPosition());
 		}
+
 		for (int i = 0; i < electricalParticlesList.size(); i++)// o(n^2) so not optimal but must do.
 		{
 			if (!electricalParticlesList[i]->GetIsFixed())
@@ -540,10 +454,13 @@ public:
 				electricalParticlesList[i]->applyOneForce(allForces);
 			}
 		}
+
 		connectedObjects.ApplyAllLinks();
+
 		for (auto& ball : objList) {
-			ball->updatePositionVerlet(dt);
+			ball->updatePosition_SubSteps(dt, subSteps);
 		}
+
 		for (auto& ball : fixedObjects) {
 			ball->SetPosition(ball->GetOldPosition());
 			ball->SetAcceleration(sf::Vector2f(0, 0));

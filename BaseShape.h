@@ -61,8 +61,9 @@ public:
 
 
 	//Updates the position following varlet integration. meaning we calculate the next position based on the previos one and with time
-	virtual void updatePositionVerlet(float dt) {}
-	virtual void updatePositionEuler(float dt) {}
+	virtual void updatePosition_SubSteps(float dt, int numSubsteps) {}
+	virtual void updatePosition(float dt) {}
+
 
 	//If you wanna apply force to the circle:
 	void applyOneForce(sf::Vector2f force) {
