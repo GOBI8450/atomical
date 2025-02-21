@@ -289,9 +289,19 @@ public:
 	void ChangeGravityForAll(float gravity) {
 		for (auto& obj : objList)
 		{
-			obj->SetGravity(gravity);
+			obj->SetAcceleration(sf::Vector2f( 0,gravity *100));
+			//obj->SetOldPosition(obj->GetOldPosition() - sf::Vector2f(0, obj->GetGravity()) + sf::Vector2f(0, gravity));
 		}
 	}
+
+	void ChangeCollisonForAll(float gravity) {
+		//TODO:
+	}
+
+	void ChangeLineLengthForAll(float lineLength) {
+		connectedObjects.SetLineLength(lineLength);
+	}
+
 
 	void ChangeVelocityForAll(sf::Vector2f newVelocity) {
 		for (auto& obj : objList)
@@ -379,7 +389,7 @@ public:
 
 	}
 
-	void MoveObjects(int window_width, int window_height, float fps, float elastic, bool planetMode, bool enableCollison, bool borderless) {
+	void MoveObjects(int window_width, int window_height, float fps, float elastic, bool enableCollison, bool borderless) {
 		//if (borderless)
 		//{
 		//	grid = new GridUnorderd();
@@ -392,6 +402,7 @@ public:
 
 		grid->clear(); // Clear the grid
 
+		//Inserting to the grid
 		for (auto& ball : objList) {
 			grid->InsertObj(ball); // Inserting BaseShape* objects
 		}
@@ -407,14 +418,20 @@ public:
 			HandleAllCollisions(window_width, window_height, elastic, borderless, fps);
 		}
 
-		for (int i = 0; i < planetList.size(); i++)
-		{
-			for (auto& ball : objList) {
+		for (auto& ball : objList) {
+			sf::Vector2f allForces = sf::Vector2f(0, 0);
+			for (int i = 0; i < planetList.size(); i++) {
 				if (typeid(*ball) != typeid(*planetList[i].first))
 				{
-					planetList[i].first->Gravitate(ball, dt);
+					allForces += planetList[i].first->Gravitate(ball, dt);
 				}
 			}
+			ball->addForce(allForces);
+		}
+
+		//Planets:
+		for (int i = 0; i < planetList.size(); i++)
+		{
 			sf::Vector2f allForces = sf::Vector2f(0, 0);
 			for (int j = 0; j < planetList.size(); j++) {
 				if (i != j) {

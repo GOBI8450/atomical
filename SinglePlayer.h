@@ -12,6 +12,7 @@
 #include "Rectangle.h"
 #include <boost\asio.hpp>
 #include "Options.h"
+#include "Slider.h"
 #include "PhysicsSimulation.h"
 
 //To run SinglePlayer
@@ -87,10 +88,14 @@ protected:
 	sf::Color background_color = sf::Color(30, 30, 30);
 	sf::Color buttonColor = sf::Color(55, 58, 64);
 	sf::Color bb = sf::Color(44, 55, 100);
-	sf::Color explosion = sf::Color(205, 92, 8);
+	sf::Color explosionColor = sf::Color(205, 92, 8);
 	sf::Color outlineColor = sf::Color(255, 255, 255);
 	sf::Color previousColor = sf::Color(0, 0, 0);
 	sf::Color sideMenuColor = sf::Color(23, 23, 23, 204); //not solid color more transperent
+	sf::Color startColorGradient = sf::Color(128, 0, 128);  // purple
+	sf::Color endColorGradient =  sf::Color(0, 0, 255);      // blue
+	sf::Color startColorSlider = sf::Color(146, 0, 146);  // darker purple
+	sf::Color endColorSlider = sf::Color(66, 0, 66);  // even darker purple
 
 	//Textures:
 	sf::Texture addButtonTexture;
@@ -113,6 +118,12 @@ protected:
 	sf::Text linkingText;
 	sf::RectangleShape sideMenuRec;
 	std::vector<Button> buttons;
+
+	//Sliders:
+	std::vector<Slider*> slidersVec;
+	Slider* gravitySlider = new Slider(300, 20, 200, 20, endColorSlider, startColorSlider, 0, 100);
+	Slider* collisionSlider = new Slider(550, 20, 200, 20, sf::Color::Red, explosionColor, 0, 100);
+	Slider* lineLengthSlider = new Slider(800, 20, 200, 20, sf::Color::Blue, sf::Color::Cyan, 0, 100);
 
 	// Menu elements
 	sf::RectangleShape headerText;
@@ -138,6 +149,7 @@ protected:
 	//Electricity:
 	int particleType = 3;
 	sf::Vector2f electronInitialVel = sf::Vector2f(0, 0); // TODO : fix it
+
 #pragma endregion
 
 public:
@@ -269,6 +281,8 @@ private:
 				leftMouseClickFlag = true; // Set flag if circle found
 				window.setMouseCursor(handCursor);
 			}
+			//Visuals:
+			handleSliders();
 		}
 
 		//Right click:
@@ -573,19 +587,37 @@ private:
 	}
 
 	void createExplosionCircles() override {
-		objectList.CreateNewCircle(options.gravity, explosion, sf::Vector2f(currentMousePos.x + 3, currentMousePos.y + 3), initialVel);
+		objectList.CreateNewCircle(options.gravity, explosionColor, sf::Vector2f(currentMousePos.x + 3, currentMousePos.y + 3), initialVel);
 		for (size_t i = 0; i < 50; i++) {
-			objectList.CreateNewCircle(options.gravity, explosion, currentMousePos, initialVel);
+			objectList.CreateNewCircle(options.gravity, explosionColor, currentMousePos, initialVel);
 			objCount++;
 		}
 	}
 
 	void createExplosionRectangles() override {
-		objectList.CreateNewRectangle(options.gravity, explosion, sf::Vector2f(currentMousePos.x + 3, currentMousePos.y + 3));
+		objectList.CreateNewRectangle(options.gravity, explosionColor, sf::Vector2f(currentMousePos.x + 3, currentMousePos.y + 3));
 		for (size_t i = 0; i < 50; i++) {
-			objectList.CreateNewRectangle(options.gravity, explosion, currentMousePos);
+			objectList.CreateNewRectangle(options.gravity, explosionColor, currentMousePos);
 			objCount++;
 		}
+	}
+
+	void handleSliders() {
+		for (auto& slider:slidersVec)
+		{
+			if (slider->containMouse(currentMousePos))
+			{
+				slider->handleClick(window, currentMousePos);
+			}
+		}
+		UpdateValuesSliders();
+	}
+
+	void UpdateValuesSliders() {
+		options.gravity = gravitySlider->getValue();
+		oldGravity = options.gravity;
+		objectList.ChangeGravityForAll(options.gravity);
+		objectList.ChangeLineLengthForAll(lineLengthSlider->getValue() * 5);
 	}
 
 	//visuals
@@ -594,11 +626,13 @@ private:
 		window.clear(background_color);
 		window.setView(view);
 
+		UpdateValuesSliders();
 		MoveAndDrawObjects();
 
 		window.setView(window.getDefaultView());
 		renderTexts();
-		renderButtons();
+		RenderButtons();
+		RenderSliders();
 
 		window.display();
 
@@ -608,7 +642,7 @@ private:
 	void MoveAndDrawObjects() override {
 		if (!freeze)
 		{
-			objectList.MoveObjects(window_width, window_height, currentFPS, elastic, planetMode, enableCollison, borderless);
+			objectList.MoveObjects(window_width, window_height, currentFPS, elastic, enableCollison, borderless);
 
 		}
 		else
@@ -622,9 +656,20 @@ private:
 	void initializeUI() override {
 		loadResources();
 		setupText();
-		setupHeaders();
+		SetupHeaders();
 		SetupSideMenu();
 		SetupButtons();
+		SetupSliders();
+	}
+
+	void SetupSliders() {
+		slidersVec.push_back(gravitySlider);
+		slidersVec.push_back(collisionSlider);
+		slidersVec.push_back(lineLengthSlider);
+
+		gravitySlider->setValue(options.gravity);
+		collisionSlider->setValue(0);
+		lineLengthSlider->setValue(lineLength);
 	}
 
 	void initializeCursors() override {
@@ -648,22 +693,20 @@ private:
 	}
 
 	void setupGradient() override {
-		sf::Color startColor(128, 0, 128);  // purple
-		sf::Color endColor(0, 0, 255);      // blue
-		gradient = GenerateGradient(startColor, endColor, gradientStepMax);
+		gradient = GenerateGradient(gradientStepMax);
 	}
 
-	std::vector<sf::Color> GenerateGradient(sf::Color startColor, sf::Color endColor, int steps) override {
+	std::vector<sf::Color> GenerateGradient(int steps) override {
 		std::vector<sf::Color> gradient;
-		float stepR = (endColor.r - startColor.r) / static_cast<float>(steps - 1);
-		float stepG = (endColor.g - startColor.g) / static_cast<float>(steps - 1);
-		float stepB = (endColor.b - startColor.b) / static_cast<float>(steps - 1);
+		float stepR = (endColorGradient.r - startColorGradient.r) / static_cast<float>(steps - 1);
+		float stepG = (endColorGradient.g - startColorGradient.g) / static_cast<float>(steps - 1);
+		float stepB = (endColorGradient.b - startColorGradient.b) / static_cast<float>(steps - 1);
 
 		for (int i = 0; i < steps; ++i) {
 			gradient.push_back(sf::Color(
-				startColor.r + stepR * i,
-				startColor.g + stepG * i,
-				startColor.b + stepB * i
+				startColorGradient.r + stepR * i,
+				startColorGradient.g + stepG * i,
+				startColorGradient.b + stepB * i
 			));
 		}
 		return gradient;
@@ -744,7 +787,7 @@ private:
 		sideMenuRec.setPosition(window_width - 110, 0);
 	}
 
-	void setupHeaders() override {
+	void SetupHeaders() override {
 		headerText.setSize(sf::Vector2f(400.f, 100.f));
 		headerText.setPosition(
 			options.window_width / 2.f - headerText.getSize().x / 2.f,
@@ -787,7 +830,7 @@ private:
 		buttons.push_back(trashButton);
 	}
 
-	void renderButtons() {
+	void RenderButtons() {
 		window.draw(sideMenuRec);
 		hovering = false;
 		for (auto& button : buttons)
@@ -813,6 +856,14 @@ private:
 		}
 		ExectuteButtons(event);
 		leftMouseClickFlag = oldMouseClickFlag;
+	}
+
+	void RenderSliders() {
+		for (auto& slider :slidersVec)
+		{
+			slider->update(1 / 60);
+			slider->draw(window);
+		}
 	}
 
 	void ExectuteButtons(std::string event) {

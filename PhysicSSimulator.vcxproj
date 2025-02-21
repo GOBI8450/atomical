@@ -168,6 +168,7 @@ boost_asio-vc143-mt-x64-1_86.lib;%(AdditionalDependencies)</AdditionalDependenci
     <ClCompile Include="PhysicsSimulatotion.cpp" />
     <ClCompile Include="Planet.cpp" />
     <ClCompile Include="Rectangle.cpp" />
+    <ClCompile Include="Slider.cpp" />
     <ClCompile Include="Source.cpp" />
     <ClCompile Include="Serialization.cpp" />
     <ClCompile Include="UI.cpp" />
@@ -189,6 +190,7 @@ boost_asio-vc143-mt-x64-1_86.lib;%(AdditionalDependencies)</AdditionalDependenci
     <ClInclude Include="Rectangle.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Serialization.h" />
+    <ClInclude Include="Slider.h" />
     <ClInclude Include="UI.h" />
   </ItemGroup>
   <ItemGroup>

@@ -63,7 +63,7 @@ public:
 	}
 
 	//For planet and non planet interaction
-	void Gravitate(BaseShape* object, float dt)
+	sf::Vector2f Gravitate(BaseShape* object, float dt)
 	{
 		// Calculate the vector from this object (Planet) to the other object
 		float distance_x = GetPosition().x - object->GetPosition().x;
@@ -73,7 +73,7 @@ public:
 		float distance = sqrt(distance_x * distance_x + distance_y * distance_y);
 
 		// Avoid division by zero in case the objects are at the same position. and if the object too close to the planet do not calculate so it wont fly away
-		if (distance == 0 || distance <= std::abs(object->GetEstimatedSize() * 2)) return;
+		if (distance == 0 || distance <= std::abs(object->GetEstimatedSize() * 2)) return sf::Vector2f(0,0);
 
 		// Normalize the direction vector
 		float inverse_distance = 1.f / distance;
@@ -87,7 +87,7 @@ public:
 		float acceleration_x = normalized_x * innerGravity * inverse_square_dropoff;
 		float acceleration_y = normalized_y * innerGravity * inverse_square_dropoff;
 
-		object->SetAcceleration(sf::Vector2f(acceleration_x, acceleration_y));
+		return sf::Vector2f(acceleration_x , acceleration_y);
 	}
 
 };

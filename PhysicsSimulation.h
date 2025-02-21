@@ -80,7 +80,7 @@ protected:
 
 	virtual void MoveAndDrawObjects() = 0;
 
-	virtual std::vector<sf::Color> GenerateGradient(sf::Color startColor, sf::Color endColor, int steps) { return std::vector<sf::Color>(); };
+	virtual std::vector<sf::Color> GenerateGradient(int steps) { return std::vector<sf::Color>(); };
 
 	virtual void loadTextures() = 0;
 
@@ -88,7 +88,7 @@ protected:
 
 	virtual void setupText() = 0;
 
-	virtual void setupHeaders() = 0;
+	virtual void SetupHeaders() = 0;
 
 	virtual void renderTexts() = 0;
 

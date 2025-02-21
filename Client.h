@@ -141,6 +141,9 @@ private:
 	sf::Color outlineColor = sf::Color(255, 255, 255);
 	sf::Color previousColor = sf::Color(0, 0, 0);
 	sf::Color sideMenuColor = sf::Color(23, 23, 23, 204);
+	sf::Color startColor = sf::Color(128, 0, 128);  // purple
+	sf::Color endColor = sf::Color(0, 0, 255);      // blue
+
 	//Textures:
 	sf::Texture addButtonTexture;
 	sf::Texture planetButtonTexture;
@@ -529,7 +532,7 @@ private:
 
 	void initializeUI() override {
 		setupText();
-		setupHeaders();
+		SetupHeaders();
 	}
 
 	void initializeCursors() override {
@@ -597,7 +600,7 @@ private:
 		linkingText.setPosition(10, 70);
 	}
 
-	void setupHeaders() override {
+	void SetupHeaders() override {
 		headerText.setSize(sf::Vector2f(400.f, 100.f));
 		headerText.setPosition(
 			options.window_width / 2.f - headerText.getSize().x / 2.f,

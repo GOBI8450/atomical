@@ -224,6 +224,10 @@ public:
 		}
 	}
 
+	void SetLineLength(float newLineLength) {
+		lineLength = newLineLength;
+	}
+
 	void Draw(sf::RenderWindow& window) {
 		sf::VertexArray lines(sf::Lines);
 		for (const auto& pair : fixedConnections) {

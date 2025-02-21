@@ -70,6 +70,10 @@ public:
 		acceleration = sf::Vector2f(force.x / mass, force.y / mass);
 	}
 
+	void applyGravity(sf::Vector2f gravityForce) {
+		acceleration += sf::Vector2f(gravityForce.x / mass, gravityForce.y / mass) - sf::Vector2f(0, gravity / mass);
+	}
+
 	void addForce(sf::Vector2f force) {
 		acceleration += sf::Vector2f(force.x / mass, force.y / mass);
 	}
@@ -116,6 +120,7 @@ public:
 	}
 
 	void SetGravity(float newGravity) {
+		applyGravity(sf::Vector2f(0, gravity));
 		gravity = newGravity;
 	}
 
