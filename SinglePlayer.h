@@ -20,11 +20,11 @@ protected:
 
 #pragma region EssantialVariables
 	sf::VideoMode desktopSize = sf::VideoMode::getDesktopMode();
-	int window_height = desktopSize.height;
-	int window_width = desktopSize.width;
-	bool fullscreen = false;
+	int window_height = options.window_height;
+	int window_width = options.window_width;
+	bool fullscreen = options.fullscreen;
 	int oldGravity = options.gravity;
-	double massLock = 0;
+	double massLock = options.massLock;
 
 
 	// Window and view settings
@@ -154,14 +154,14 @@ public:
 		setupGradient();
 	}
 
-	std::string Run() {
+	std::string Run() override{
 		currentMousePos = window.mapPixelToCoords(sf::Mouse::getPosition(window), view);
 		handleAllEvents();
 		renderSimulation();
 		return screen;
 	}
 
-	void SetScreen(std::string newScreen) {
+	void SetScreen(std::string newScreen) override{
 		screen = newScreen;
 	}
 
@@ -221,6 +221,16 @@ private:
 
 	void handleEventsFromPollEvent(sf::Event event) override {
 		if (event.type == sf::Event::Closed) { window.close(); }
+		//if (event.type == sf::Event::Resized) {
+		//	// resize my view
+		//	window_width = event.size.width;
+		//	window_height = event.size.height;
+		//	view.setSize({
+		//			static_cast<float>(event.size.width),
+		//			static_cast<float>(event.size.height)
+		//		});
+		//	window.setView(view);
+		//}
 		handleKeyPress(event);
 		handleMouseRelase(event);
 		handleMouseWheel(event);
@@ -420,6 +430,11 @@ private:
 		if (!options.fullscreen)
 		{
 			window.create(options.desktopSize, "Fullscreen Mode", sf::Style::Fullscreen);
+			//view.setSize({
+			//	static_cast<float>(options.desktopSize.width),
+			//	static_cast<float>(options.desktopSize.height)
+			//});
+			window.setView(view);
 			options.fullscreen = true;
 		}
 		else {
@@ -655,8 +670,6 @@ private:
 	}
 
 	void loadTextures() override {
-		// Since no textures are used in the original code, this method is kept minimal
-		// but provides a hook for future texture loading if needed
 		try {
 			if (!addButtonTexture.loadFromFile("Visuals/Buttons/AddButton.png")) {
 				throw std::runtime_error("Failed to load texture");

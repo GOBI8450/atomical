@@ -22,6 +22,7 @@ public:
 	PhysicsSimulationActions() {}
 
 	virtual ~PhysicsSimulationActions() = default;
+	virtual std::string Run() { return ""; };
 
 protected:
 
@@ -71,6 +72,8 @@ public:
 	virtual void initializeUI() = 0;
 
 	virtual void setupGradient() {};
+
+	virtual void SetScreen(std::string newScreen) = 0;
 
 protected:
 	virtual void renderSimulation() = 0;

@@ -28,7 +28,8 @@ private:
     float headerTextureResizer = 1.2;
 
     // Textures
-    sf::Texture startButtonTexture;
+    sf::Texture offlineButtonTexture;
+    sf::Texture onlineButtonTexture;
     sf::Texture exitButtonTexture;
     sf::Texture settingsButtonTexture;
     sf::Texture mainMenuHeaderTexture;
@@ -43,12 +44,14 @@ public:
     };
 
     bool loadTextures() {
-        if (!startButtonTexture.loadFromFile("visuals/START.png")) return false;
+        if (!offlineButtonTexture.loadFromFile("visuals/OFFLINE.png")) return false;
+        if (!onlineButtonTexture.loadFromFile("visuals/ONLINE.png")) return false;
         if (!exitButtonTexture.loadFromFile("visuals/EXIT.png")) return false;
         if (!settingsButtonTexture.loadFromFile("visuals/SETTINGS.png")) return false;
         if (!mainMenuHeaderTexture.loadFromFile("visuals/Header.png")) return false;
 
-        startButtonTexture.setSmooth(true);
+        offlineButtonTexture.setSmooth(true);
+        onlineButtonTexture.setSmooth(true);
         exitButtonTexture.setSmooth(true);
         settingsButtonTexture.setSmooth(true);
         mainMenuHeaderTexture.setSmooth(true);
@@ -62,18 +65,22 @@ public:
         headerText.setPosition(options.window_width / 2, options.window_height / 2 - 350);
         headerText.setTexture(&mainMenuHeaderTexture);
 
-        Button startButtonMainMenu = Button(534 / textureResizer, 274 / textureResizer,
-            sf::Vector2f(options.window_width / 2, 450), "START");
+        Button offlineButtonMainMenu = Button(534 / textureResizer, 274 / textureResizer,
+            sf::Vector2f(options.window_width / 2 - 200, 450), "OFFLINE");
+        Button onlineButtonMainMenu = Button(534 / textureResizer, 274 / textureResizer,
+            sf::Vector2f(options.window_width / 2 + 200, 450), "CONNECT_ONLINE");
         Button settingsButtonMainMenu = Button(534 / textureResizer, 274 / textureResizer,
             sf::Vector2f(options.window_width / 2, 675), "SETTINGS");
         Button exitButtonMainMenu = Button(534 / textureResizer, 274 / textureResizer,
             sf::Vector2f(options.window_width / 2, 925), "EXIT");
 
-        startButtonMainMenu.SetTexture(startButtonTexture);
+        offlineButtonMainMenu.SetTexture(offlineButtonTexture);
+        onlineButtonMainMenu.SetTexture(onlineButtonTexture);
         settingsButtonMainMenu.SetTexture(settingsButtonTexture);
         exitButtonMainMenu.SetTexture(exitButtonTexture);
 
-        mainMenuButtonVec.push_back(std::make_pair(startButtonMainMenu, false));
+        mainMenuButtonVec.push_back(std::make_pair(offlineButtonMainMenu, false));
+        mainMenuButtonVec.push_back(std::make_pair(onlineButtonMainMenu, false));
         mainMenuButtonVec.push_back(std::make_pair(settingsButtonMainMenu, false));
         mainMenuButtonVec.push_back(std::make_pair(exitButtonMainMenu, false));
     }

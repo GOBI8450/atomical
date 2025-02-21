@@ -6,8 +6,8 @@
 
 struct Options {
 	sf::VideoMode desktopSize = sf::VideoMode::getDesktopMode();
-	int window_height = desktopSize.height;
-	int window_width = desktopSize.width;
+	int window_height = 1080;
+	int window_width = 1920;
 	bool fullscreen = false;
 	float gravity = 9.8;
 	double massLock = 0;

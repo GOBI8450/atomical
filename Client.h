@@ -16,8 +16,6 @@
 using boost::asio::ip::tcp;
 using boost::asio::ip::udp;
 
-int BaseShape::objectCount = 0;
-
 class Client : public HandleNetworkingClient, public PhysicsSimulationActions, public PhysicsSimulationVisual {
 public:
 	Client(sf::RenderWindow& window, boost::asio::io_context& io_context, const std::string& host, unsigned short tcp_port, unsigned short udp_port) :
@@ -36,7 +34,7 @@ public:
 		InitializeKeyActions();
 	}
 
-	std::string Run() {
+	std::string Run() override{
 		currentMousePos = window.mapPixelToCoords(sf::Mouse::getPosition(window), view);
 		handleAllEvents();
 		renderSimulation();
@@ -77,11 +75,12 @@ public:
 private:
 #pragma region EssantialVariables
 	sf::VideoMode desktopSize = sf::VideoMode::getDesktopMode();
-	int window_height = desktopSize.height;
-	int window_width = desktopSize.width;
-	bool fullscreen = false;
+	int window_height = options.window_height;
+	int window_width = options.window_width;
+	bool fullscreen = options.fullscreen;
 	int oldGravity = options.gravity;
-	double massLock = 0;
+	double massLock = options.massLock;
+
 	// Window and view settings
 	sf::RenderWindow& window;
 	sf::View view;
@@ -90,7 +89,7 @@ private:
 	// Cursors
 	sf::Cursor handCursor;
 	sf::Cursor defaultCursor;
-	std::string screen = "START";
+	std::string screen = "ONLINE";
 	bool hovering = false;
 	bool connectingMode = false;
 	bool createConnectedObjMode = false;
@@ -453,6 +452,7 @@ private:
 
 
 
+
 	void handleScaling() override {
 		if (scaleFlag && (mouseFlagScroll == 1 || mouseFlagScroll == -1)) {
 			if (Circle* circle = dynamic_cast<Circle*>(thisBallPointer)) {
@@ -628,6 +628,10 @@ private:
 		}
 	}
 
+	void SetScreen(std::string newScreen) override {
+		screen = newScreen;
+	}
+
 	std::vector<BaseShape> ConvertForSending() override {
 		return std::vector<BaseShape>();
 	}
@@ -637,112 +641,85 @@ private:
 
 
 
-void initializeWindow(sf::RenderWindow& window, sf::View view, sf::ContextSettings settings) {
-	window.create(
-		sf::VideoMode(options.window_width, options.window_height), "TomySim", sf::Style::Default, settings);
-	view = window.getDefaultView();
-	window.setVerticalSyncEnabled(true);
-	window.setFramerateLimit(60);
-}
-
-void Run(std::string& screen, Client& simulation, MainMenu& mainMenu, Settings& settingsClass, sf::RenderWindow& window) {
-	while (window.isOpen()) {
-		if (screen == "START") {
-			screen = simulation.Run();
-		}
-		else if (screen == "MAIN MENU") {
-			screen = mainMenu.handleMainMenu();
-		}
-		else if (screen == "SETTINGS") {
-			screen = settingsClass.handleSettings();
-		}
-		else {
-			window.close();
-			break;  //  break to exit the loop when closing
-		}
-	}
-}
-
-
-int main() {
-	try {
-		//NETWORKING:
-		const std::string server_ip = "127.0.0.1";  // or "localhost"
-		unsigned short tcp_port = 8080;
-		unsigned short udp_port = 8081;
-
-		std::cout << "Starting client..." << std::endl;
-		std::cout << "Attempting to connect to:" << std::endl;
-		std::cout << "Server IP: " << server_ip << std::endl;
-		std::cout << "TCP port: " << tcp_port << std::endl;
-		std::cout << "UDP port: " << udp_port << std::endl;
-
-		boost::asio::io_context io_context;
-
-
-		//ENGINE:
-		sf::RenderWindow window;
-		sf::ContextSettings settings;
-		settings.antialiasingLevel = 8;
-		sf::View view = window.getDefaultView();
-		initializeWindow(window, view, settings);
-
-		MainMenu mainMenu(window);
-		Settings settingsClass(window);
-		std::string screen = "START";
-
-		Client client(window, io_context, server_ip, tcp_port, udp_port);
-		client.connect();
-
-		// start a thread to run the IO service
-		std::thread io_thread([&io_context]() {
-			io_context.run();
-			});
-
-		std::cout << "\nAvailable commands:" << std::endl;
-		std::cout << "- Type a message to send via TCP" << std::endl;
-		std::cout << "- Type 'udp:' followed by a message to send via UDP" << std::endl;
-		std::cout << "- Type 'stop' to stop connection attempts" << std::endl;
-		std::cout << "- Type 'connect' to start connection attempts" << std::endl;
-		std::cout << "- Type 'quit' to exit" << std::endl;
-
-		Run(screen, client, mainMenu, settingsClass, window);
-
-
-		// Main loop to get user input and send messages
-		std::string input;
-		while (std::getline(std::cin, input)) {
-
-			if (input == "quit") {
-				std::cout << "Shutting down client..." << std::endl;
-				client.stop_connecting();
-				break;
-			}
-			if (input == "stop") {
-				client.stop_connecting();
-				std::cout << "Stopped connection attempts." << std::endl;
-				continue;
-			}
-			if (input == "connect") {
-				std::cout << "Starting connection attempts..." << std::endl;
-				client.connect();
-				continue;
-			}
-
-			if (input.substr(0, 4) == "udp:") {
-				client.send_udp_message(input.substr(4));
-			}
-			else {
-				client.send_tcp_message(input);
-			}
-		}
-		io_context.stop();
-		io_thread.join();
-	}
-	catch (std::exception& e) {
-		std::cerr << "Fatal error: " << e.what() << std::endl;
-		return 1;
-	}
-
-	return 0;
-}
+//int main() {
+//	try {
+//		//NETWORKING:
+//		const std::string server_ip = "10.100.102.172";  // or "localhost"
+//		unsigned short tcp_port = 8080;
+//		unsigned short udp_port = 8081;
+//
+//		std::cout << "Starting client..." << std::endl;
+//		std::cout << "Attempting to connect to:" << std::endl;
+//		std::cout << "Server IP: " << server_ip << std::endl;
+//		std::cout << "TCP port: " << tcp_port << std::endl;
+//		std::cout << "UDP port: " << udp_port << std::endl;
+//
+//		boost::asio::io_context io_context;
+//
+//
+//		//ENGINE:
+//		sf::RenderWindow window;
+//		sf::ContextSettings settings;
+//		settings.antialiasingLevel = 8;
+//		sf::View view = window.getDefaultView();
+//		initializeWindow(window, view, settings);
+//
+//		MainMenu mainMenu(window);
+//		Settings settingsClass(window);
+//		std::string screen = "START";
+//
+//		Client client(window, io_context, server_ip, tcp_port, udp_port);
+//		client.connect();
+//
+//		// start a thread to run the IO service
+//		std::thread io_thread([&io_context]() {
+//			io_context.run();
+//			});
+//
+//		std::cout << "\nAvailable commands:" << std::endl;
+//		std::cout << "- Type a message to send via TCP" << std::endl;
+//		std::cout << "- Type 'udp:' followed by a message to send via UDP" << std::endl;
+//		std::cout << "- Type 'stop' to stop connection attempts" << std::endl;
+//		std::cout << "- Type 'connect' to start connection attempts" << std::endl;
+//		std::cout << "- Type 'quit' to exit" << std::endl;
+//
+//		Run(screen, client, mainMenu, settingsClass, window);
+//
+//
+//		// Main loop to get user input and send messages
+//		std::string input;
+//		while (std::getline(std::cin, input)) {
+//
+//			if (input == "quit") {
+//				std::cout << "Shutting down client..." << std::endl;
+//				client.stop_connecting();
+//				break;
+//			}
+//			if (input == "stop") {
+//				client.stop_connecting();
+//				std::cout << "Stopped connection attempts." << std::endl;
+//				continue;
+//			}
+//			if (input == "connect") {
+//				std::cout << "Starting connection attempts..." << std::endl;
+//				client.connect();
+//				continue;
+//			}
+//
+//			if (input.substr(0, 4) == "udp:") {
+//				client.send_udp_message(input.substr(4));
+//			}
+//			else {
+//				client.send_tcp_message(input);
+//			}
+//		}
+//		io_context.stop();
+//		io_thread.join();
+//	}
+//	catch (std::exception& e) {
+//		std::cerr << "Fatal error: " << e.what() << std::endl;
+//		return 1;
+//	}
+//
+//	return 0;
+//}
