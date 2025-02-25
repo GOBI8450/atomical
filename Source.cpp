@@ -42,18 +42,25 @@ void toggleFullscreen(sf::RenderWindow& window) {
 	window.setVerticalSyncEnabled(true);
 }
 
-void Run(std::string& screen, PhysicsSimulationActions& simulationActions, PhysicsSimulationVisual& simulationVisual,Client& client, MainMenu& mainMenu, Settings& settingsClass, sf::RenderWindow& window) {
+void Run(std::string& screen, PhysicsSimulationActions& simulationActions, PhysicsSimulationVisual& simulationVisual, MainMenu& mainMenu, Settings& settingsClass, sf::RenderWindow& window,
+	boost::asio::io_context& io_context, const std::string server_ip,
+	unsigned short& tcp_port,unsigned short& udp_port) 
+	{
+	Client* client = new Client(window, io_context, server_ip, tcp_port, udp_port);
+	client->connect();
 	while (window.isOpen()) {
 		if (screen == "OFFLINE") {
 			simulationVisual.SetScreen(screen);
 			screen = simulationActions.Run();
 		}
 		else if (screen == "ONLINE") {
-			screen = client.Run();
+			screen = client->Run();
 		}
 		else if (screen == "CONNECT_ONLINE") {
-			client.connect();
-			screen = client.Run();
+			simulationVisual.SetScreen(screen);
+			client = new Client(window, io_context, server_ip, tcp_port, udp_port);
+			client->connect();
+			screen = client->Run();
 		}
 		else if (screen == "MAIN MENU") {
 			screen = mainMenu.handleMainMenu();
@@ -75,7 +82,7 @@ void Run(std::string& screen, PhysicsSimulationActions& simulationActions, Physi
 int main() {
 	try {
 		//NETWORKING:
-		const std::string server_ip = "10.100.102.172";  // or "localhost"
+		const std::string server_ip = "127.0.0.1";  // or "localhost"
 		unsigned short tcp_port = 8080;
 		unsigned short udp_port = 8081;
 
@@ -100,15 +107,15 @@ int main() {
 		Settings settingsClass(window);
 		std::string screen = "OFFLINE";
 
-		Client client(window, io_context, server_ip, tcp_port, udp_port);
-		client.connect();
+		//Client client(window, io_context, server_ip, tcp_port, udp_port);
+		//client.connect();
 
 		// start a thread to run the IO service
 		std::thread io_thread([&io_context]() {
 			io_context.run();
 			});
 
-		Run(screen, simulation, simulation, client, mainMenu, settingsClass, window); //Stops when exited/bug/network stopped etc..
+		Run(screen, simulation, simulation, mainMenu, settingsClass, window, io_context, server_ip, tcp_port, udp_port); //Stops when exited/bug/network stopped etc..
 
 		io_context.stop();
 		io_thread.join();
