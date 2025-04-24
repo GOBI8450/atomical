@@ -52,7 +52,6 @@ void Run(std::string& screen, PhysicsSimulationActions& simulationActions, Physi
 			screen = client.Run();
 		}
 		else if (screen == "CONNECT_ONLINE") {
-			client.connect();
 			screen = client.Run();
 		}
 		else if (screen == "MAIN MENU") {
@@ -75,7 +74,7 @@ void Run(std::string& screen, PhysicsSimulationActions& simulationActions, Physi
 int main() {
 	try {
 		//NETWORKING:
-		const std::string server_ip = "10.100.102.172";  // or "localhost"
+		const std::string server_ip = "10.100.102.19";  // or "localhost"
 		unsigned short tcp_port = 8080;
 		unsigned short udp_port = 8081;
 
