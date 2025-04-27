@@ -48,6 +48,8 @@ protected:
 	bool enableCollison = true;
 	bool borderless = false;
 	bool renderButtonsMenu = true;
+	bool deletedSomething = false;
+
 	std::vector<std::pair<sf::Keyboard::Key, std::function<void()>>> keyActions;
 
 	// Physics and simulation parameters
@@ -183,6 +185,7 @@ private:
 		keyActions.push_back({ sf::Keyboard::Escape, [&]() {
 			screen = "MAIN MENU";
 			objectList.DeleteAll();
+			deletedSomething = true;
 			objCount = 0;
 		} });
 
@@ -195,8 +198,12 @@ private:
 
 		keyActions.push_back({ sf::Keyboard::X, [&]() { ToggleChainMode(); } });
 		keyActions.push_back({ sf::Keyboard::BackSpace, [&]() {
-			if (leftMouseClickFlag) objectList.DeleteThisObj(thisBallPointer);
-		} });
+			if(!deletedSomething && leftMouseClickFlag){
+				objectList.DeleteThisObj(thisBallPointer);
+				window.setMouseCursor(defaultCursor);
+				deletedSomething = true;
+			}
+		}});
 
 		keyActions.push_back({ sf::Keyboard::H, [&]() { CreateRandomConnectedCircles(); } });
 		keyActions.push_back({ sf::Keyboard::F11, [&]() { ToggleFullscreen(); } });
@@ -271,7 +278,7 @@ private:
 
 	void handleMouseClick() override {
 		//Left click:
-		if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && leftMouseClickFlag == false) {
+		if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && leftMouseClickFlag == false && !deletedSomething) {
 			thisBallPointer = objectList.IsInRadius(currentMousePos); // Check if a circle is within radius
 			if (previousBallPointer == nullptr)
 			{
@@ -305,13 +312,14 @@ private:
 			if (event.mouseButton.button == sf::Mouse::Left) {
 				leftMouseClickFlag = false;
 				scaleFlag = false;
-				if (thisBallPointer != nullptr)
+				if (thisBallPointer != nullptr && !deletedSomething)
 				{
 					window.setMouseCursor(defaultCursor);
 					thisBallPointer->setColor(previousColor);
 					thisBallPointer->SetOutline(outlineColor, 0);
 				}
 				TouchedOnceLeftClick = false;
+				deletedSomething = false;
 			}
 
 			//Right mouse button:
@@ -324,7 +332,7 @@ private:
 	}
 
 	void handleMouseInteraction() override {
-		if (leftMouseClickFlag) { // Check if a circle is found
+		if (leftMouseClickFlag && !deletedSomething) { // Check if a circle is found
 			thisBallPointer->SetPosition(currentMousePos); // Set position of the found ball
 			if (!TouchedOnceLeftClick && thisBallPointer!=nullptr)
 			{
@@ -459,6 +467,7 @@ private:
 
 	void Restart() {
 		objectList.DeleteAll();
+		deletedSomething = true;
 		objCount = 0;
 		planetMode = false;
 		connectingMode = false;
@@ -476,6 +485,7 @@ private:
 		leftMouseClickFlag = false;
 		rightMouseClickFlag = false;
 
+		window.setMouseCursor(defaultCursor);
 	}
 
 	void createConnectedObjects() override {
@@ -488,7 +498,11 @@ private:
 	void createPlanet() override {
 		planetMode = true;
 		initialVel = sf::Vector2f(200, 0);
-		objectList.ChangeVelocityForAll(initialVel);
+		if (initialVel == sf::Vector2f(0,0))
+		{
+			initialVel = sf::Vector2f(200, 0);
+			objectList.ChangeVelocityForAll(initialVel);
+		}
 		objectList.CreateNewPlanet(70000000, ball_color, currentMousePos, 20, 5.9722 * pow(10, 16));
 		objCount++;
 	}

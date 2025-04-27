@@ -421,7 +421,7 @@ public:
 		for (auto& ball : objList) {
 			sf::Vector2f allForces = sf::Vector2f(0, 0);
 			for (int i = 0; i < planetList.size(); i++) {
-				if (typeid(*ball) != typeid(*planetList[i].first))
+				if (ball!=nullptr && planetList[i].first != nullptr && typeid(*ball) != typeid(*planetList[i].first))
 				{
 					allForces += planetList[i].first->Gravitate(ball, dt);
 				}
@@ -438,9 +438,12 @@ public:
 					allForces += planetList[i].first->GravitateAccurate(planetList[j].first);
 				}
 			}
-			planetList[i].first->applyOneForce(allForces);
-			addThickLine(planetList[i].second, planetList[i].first->GetOldPosition(), planetList[i].first->GetPosition(), planetList[i].first->GetRadius() / 1.5, planetList[i].first->GetColor());
-			rebuildVertexArray(planetList[i].second, 252);
+			if (planetList[i].first != nullptr)
+			{
+				planetList[i].first->applyOneForce(allForces);
+				addThickLine(planetList[i].second, planetList[i].first->GetOldPosition(), planetList[i].first->GetPosition(), planetList[i].first->GetRadius() / 1.5, planetList[i].first->GetColor());
+				rebuildVertexArray(planetList[i].second, 252);
+			}
 			for (int alphaChange = planetList[i].second.getVertexCount() - 4; alphaChange >= 0; alphaChange -= 4)  // Start from last rectangle and move backwards
 			{
 				sf::Color newColor = planetList[i].first->GetColor();

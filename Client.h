@@ -67,7 +67,7 @@ public:
 		}
 		else {
 			// General case for unknown or regular string messages
-			std::cout << "Received message: " << message << std::endl;
+			//std::cout << "Received message: " << message << std::endl;
 			SaveMessage(message);
 		}
 	}
