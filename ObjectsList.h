@@ -160,7 +160,7 @@ public:
 	void HandleAllCollisions(int window_width, int window_height, float elastic, bool borderless, float fps) {
 		float dt = 1 / fps;
 		if (elastic == 0) { // Verlet integration
-			for (auto& obj : objList) {
+			for (BaseShape* obj : objList){
 				if (!borderless)
 				{
 					// Check if obj is a Circle
