@@ -72,6 +72,29 @@ public:
 		}
 	}
 
+	void Restart() override{
+		objectList.DeleteAll();
+		//deletedSomething = true;
+		objCount = 0;
+		planetMode = false;
+		connectingMode = false;
+		previousColor = sf::Color(0, 0, 0);
+		initialVel = sf::Vector2f(0, 0);
+
+		// Mouse and interaction state
+		previousMousePos = nullptr;
+		currentMousePos = sf::Vector2f(0, 0);
+		mouseFlagScrollUp = false;
+		mouseFlagScrollDown = false;
+		scaleFlag = false;
+		TouchedOnceLeftClick = false;
+		TouchedOnceRightClick = false;
+		leftMouseClickFlag = false;
+		rightMouseClickFlag = false;
+
+		window.setMouseCursor(defaultCursor);
+	}
+
 private:
 #pragma region EssantialVariables
 	sf::VideoMode desktopSize = sf::VideoMode::getDesktopMode();
@@ -158,8 +181,6 @@ private:
 	std::vector<sf::Color> gradient;
 	// UI Elements
 	sf::Font font;
-	sf::Text ballsCountText;
-	sf::Text fpsText;
 	sf::Text linkingText;
 	sf::RectangleShape sideMenuRec;
 	std::vector<Button> buttons;
@@ -330,7 +351,6 @@ private:
 			screen = "MAIN MENU";
 			objectList.DeleteAll();
 			objCount = 0;
-			disconnect_from_server();
 		} });
 
 		keyActions.push_back({ sf::Keyboard::BackSpace, [&]() {
@@ -452,9 +472,6 @@ private:
 			}
 		}
 	}
-
-
-
 
 	void handleScaling() override {
 		if (scaleFlag && (mouseFlagScroll == 1 || mouseFlagScroll == -1)) {
@@ -580,24 +597,12 @@ private:
 	}
 
 	void setupText() override {
-		// FPS Text
-		fpsText.setFont(font);
-		fpsText.setCharacterSize(20);
-		fpsText.setFillColor(sf::Color::White);
-		fpsText.setPosition(10, 10);
-
-		// Balls Count Text
-		ballsCountText.setFont(font);
-		ballsCountText.setCharacterSize(20);
-		ballsCountText.setFillColor(sf::Color::White);
-		ballsCountText.setPosition(10, 40);
-
 		// Linking Text
 		linkingText.setFont(font);
 		linkingText.setString("DEACTIVATED");
 		linkingText.setCharacterSize(20);
 		linkingText.setFillColor(sf::Color::White);
-		linkingText.setPosition(10, 70);
+		linkingText.setPosition(10, 10);
 	}
 
 	void SetupHeaders() override {
@@ -616,12 +621,7 @@ private:
 		fpsStream << "FPS: " << static_cast<int>(currentFPS);
 		ballCountStream << "Balls Count: " << static_cast<int>(objCount);
 
-		fpsText.setString(fpsStream.str());
-		ballsCountText.setString(ballCountStream.str());
-
-		window.draw(fpsText);
 		window.draw(linkingText);
-		window.draw(ballsCountText);
 	}
 
 	void limitFrameRate() override {

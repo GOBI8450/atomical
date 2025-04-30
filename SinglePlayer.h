@@ -179,6 +179,29 @@ public:
 		screen = newScreen;
 	}
 
+	void Restart() override{
+		objectList.DeleteAll();
+		deletedSomething = true;
+		objCount = 0;
+		planetMode = false;
+		connectingMode = false;
+		previousColor = sf::Color(0, 0, 0);
+		initialVel = sf::Vector2f(0, 0);
+
+		// Mouse and interaction state
+		previousMousePos = nullptr;
+		currentMousePos = sf::Vector2f(0, 0);
+		mouseFlagScrollUp = false;
+		mouseFlagScrollDown = false;
+		scaleFlag = false;
+		TouchedOnceLeftClick = false;
+		TouchedOnceRightClick = false;
+		leftMouseClickFlag = false;
+		rightMouseClickFlag = false;
+
+		window.setMouseCursor(defaultCursor);
+	}
+
 private:
 	void InitializeKeyActions() {
 		// Populate the key-action vector
@@ -465,28 +488,6 @@ private:
 		}
 	}
 
-	void Restart() {
-		objectList.DeleteAll();
-		deletedSomething = true;
-		objCount = 0;
-		planetMode = false;
-		connectingMode = false;
-		previousColor = sf::Color(0, 0, 0);
-		initialVel = sf::Vector2f(0, 0);
-
-		// Mouse and interaction state
-		previousMousePos = nullptr;
-		currentMousePos = sf::Vector2f(0,0);
-		mouseFlagScrollUp = false;
-		mouseFlagScrollDown = false;
-		scaleFlag = false;
-		TouchedOnceLeftClick = false;
-		TouchedOnceRightClick = false;
-		leftMouseClickFlag = false;
-		rightMouseClickFlag = false;
-
-		window.setMouseCursor(defaultCursor);
-	}
 
 	void createConnectedObjects() override {
 		BaseShape* newObject = objectList.CreateNewCircle(options.gravity, gradient[gradientStep], currentMousePos, initialVel);

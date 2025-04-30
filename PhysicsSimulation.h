@@ -23,6 +23,7 @@ public:
 
 	virtual ~PhysicsSimulationActions() = default;
 	virtual std::string Run() { return ""; };
+	virtual void Restart() {};
 
 protected:
 

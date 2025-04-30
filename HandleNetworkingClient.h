@@ -201,7 +201,7 @@ private:
 					start_tcp_receive();
 				}
 				else {
-					std::cout << "TCP receive failed: " << ec.message() << std::endl;
+					std::cout << "TCP receive failed: " << ec.message() << ", Bytes -" << length << std::endl;
 				}
 			});
 
@@ -221,7 +221,7 @@ private:
 					start_udp_receive();       // Continue receiving
 				}
 				else {
-					std::cout << "UDP receive failed: " << errorCode.message() << std::endl;
+					std::cout << "UDP receive failed: " << errorCode.message() << ", Bytes -" << bytesRecived << std::endl;
 				}
 			});
 	}
@@ -236,7 +236,7 @@ private:
 	udp::endpoint udp_endpoint_;
 	udp::endpoint udp_sender_endpoint_;
 	boost::asio::streambuf tcp_buffer_;
-	enum { max_length = 1024 };
+	enum { max_length = 8192};
 	char udp_data_[max_length];
 	std::deque<std::string> tcp_message_queue_;
 	std::vector<std::string> storedMessages;

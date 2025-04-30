@@ -16,6 +16,7 @@
 #include "Options.h"
 #include "UI.h"
 #include "Client.h"
+#include <windows.h>
 
 using boost::asio::ip::tcp;
 using boost::asio::ip::udp;
@@ -24,7 +25,7 @@ int BaseShape::objectCount = 0;
 
 void initializeWindow(sf::RenderWindow& window, sf::View view, sf::ContextSettings settings) {
 	window.create(
-		sf::VideoMode(options.window_width, options.window_height), "TomySim", sf::Style::Default, settings);
+	sf::VideoMode(options.window_width, options.window_height), "TomySim", sf::Style::Default, settings);
 	view = window.getDefaultView();
 	window.setVerticalSyncEnabled(true);
 	window.setFramerateLimit(60);
@@ -42,8 +43,8 @@ void toggleFullscreen(sf::RenderWindow& window) {
 	window.setVerticalSyncEnabled(true);
 }
 
-void Run(std::string& screen, PhysicsSimulationActions& simulationActions, PhysicsSimulationVisual& simulationVisual,Client& client, MainMenu& mainMenu, Settings& settingsClass, sf::RenderWindow& window) {
-	while (window.isOpen()) {
+bool mainLoop(std::string& screen, PhysicsSimulationActions& simulationActions, PhysicsSimulationVisual& simulationVisual, Client& client, MainMenu& mainMenu, Settings& settingsClass, sf::RenderWindow& window) {
+	// Main loop for the application
 		if (screen == "OFFLINE") {
 			simulationVisual.SetScreen(screen);
 			screen = simulationActions.Run();
@@ -66,7 +67,66 @@ void Run(std::string& screen, PhysicsSimulationActions& simulationActions, Physi
 		}
 		else {
 			window.close();
-			break;  //  break to exit the loop when closing
+			client.disconnect_from_server();
+			return false;  //  break to exit the loop when closing
+		}
+		return true;  // continue the loop
+}
+
+void restartSimulation(std::string& screen, PhysicsSimulationActions& simulationActions, PhysicsSimulationVisual& simulationVisual, Client& client, MainMenu& mainMenu, Settings& settingsClass, sf::RenderWindow& window) {
+	client.Restart();
+	simulationActions.Restart();
+	mainLoop(screen, simulationActions, simulationVisual, client, mainMenu, settingsClass, window);
+}
+
+void Run(std::string& screen, PhysicsSimulationActions& simulationActions, PhysicsSimulationVisual& simulationVisual,Client& client, MainMenu& mainMenu, Settings& settingsClass, sf::RenderWindow& window) {
+	while (window.isOpen()) {
+		try
+		{
+			if (!mainLoop(screen, simulationActions, simulationVisual, client, mainMenu, settingsClass, window))
+			{
+				break;
+			}
+		}
+		catch (const std::exception& error)
+		{
+			std::cerr << "Error in source - Run: " << error.what() << std::endl;
+			restartSimulation(screen, simulationActions, simulationVisual, client, mainMenu, settingsClass, window);
+		}
+		catch (const boost::system::system_error& error)
+		{
+			std::cerr << "Error in source - Boost: " << error.what() << std::endl;
+			restartSimulation(screen, simulationActions, simulationVisual, client, mainMenu, settingsClass, window);
+		}
+		catch (const std::runtime_error& error)
+		{
+			std::cerr << "Error in source - Runtime: " << error.what() << std::endl;
+			restartSimulation(screen, simulationActions, simulationVisual, client, mainMenu, settingsClass, window);
+		}
+		catch (const std::bad_alloc& error)
+		{
+			std::cerr << "Error in source - Bad Alloc: " << error.what() << std::endl;
+			restartSimulation(screen, simulationActions, simulationVisual, client, mainMenu, settingsClass, window);
+		}
+		catch (const std::out_of_range& error)
+		{
+			std::cerr << "Error in source - Out of Range: " << error.what() << std::endl;
+			restartSimulation(screen, simulationActions, simulationVisual, client, mainMenu, settingsClass, window);
+		}
+		catch (const std::invalid_argument& error)
+		{
+			std::cerr << "Error in source - Invalid Argument: " << error.what() << std::endl;
+			restartSimulation(screen, simulationActions, simulationVisual, client, mainMenu, settingsClass, window);
+		}
+		catch (const std::logic_error& error)
+		{
+			std::cerr << "Error in source - Logic Error: " << error.what() << std::endl;
+			restartSimulation(screen, simulationActions, simulationVisual, client, mainMenu, settingsClass, window);
+		}
+		catch (...)
+		{
+			std::cerr << "Unknown error occurred." << std::endl;
+			restartSimulation(screen, simulationActions, simulationVisual, client, mainMenu, settingsClass, window);
 		}
 	}
 }
@@ -115,7 +175,6 @@ int main() {
 		return 0;
 	}
 	catch (const std::exception& error) {
-		std::cerr << "Error: " << error.what() << std::endl;
-		return 1;
+		std::cerr << "Error in source: " << error.what() << std::endl;
 	}
 }
