@@ -19,87 +19,92 @@
 class SinglePlayer : public PhysicsSimulationVisual, public PhysicsSimulationActions {
 protected:
 
+	// Essential variables for the SinglePlayer simulation
 #pragma region EssantialVariables
-	sf::VideoMode desktopSize = sf::VideoMode::getDesktopMode();
-	int window_height = options.window_height;
-	int window_width = options.window_width;
-	bool fullscreen = options.fullscreen;
-	int oldGravity = options.gravity;
-	double massLock = options.massLock;
 
+// Screen and window settings
+	sf::VideoMode desktopSize = sf::VideoMode::getDesktopMode(); // Get the desktop resolution
+	int window_height = options.window_height; // Window height from options
+	int window_width = options.window_width;   // Window width from options
+	bool fullscreen = options.fullscreen;      // Fullscreen mode flag
+	int oldGravity = options.gravity;          // Previous gravity value
+	double massLock = options.massLock;        // Mass lock for objects
 
 	// Window and view settings
-	sf::RenderWindow& window;
-	sf::View view;
-	sf::ContextSettings settings;
-	const float ZOOM_FACTOR = 1.5f;
+	sf::RenderWindow& window;                  // Reference to the main render window
+	sf::View view;                             // View for rendering
+	sf::ContextSettings settings;              // Context settings for the window
+	const float ZOOM_FACTOR = 1.5f;            // Zoom factor for the view
 
-	// Cursors
-	sf::Cursor handCursor;
-	sf::Cursor defaultCursor;
+	// Cursor settings
+	sf::Cursor handCursor;                     // Hand cursor for interaction
+	sf::Cursor defaultCursor;                  // Default arrow cursor
 
-	std::string screen = "MAIN MENU";
+	// Screen state
+	std::string screen = "MAIN MENU";          // Current screen (e.g., MAIN MENU, GAME)
 
-	bool hovering = false;
-	bool connectingMode = false;
-	bool createConnectedObjMode = false;
-	bool createChain = false;
-	bool planetMode = false;
-	bool enableCollison = true;
-	bool borderless = false;
-	bool renderButtonsMenu = true;
-	bool deletedSomething = false;
+	// Interaction flags
+	bool hovering = false;                     // Whether the mouse is hovering over an object
+	bool connectingMode = false;               // Whether connecting mode is active
+	bool createConnectedObjMode = false;       // Whether creating connected objects is active
+	bool createChain = false;                  // Whether chain creation mode is active
+	bool planetMode = false;                   // Whether planet creation mode is active
+	bool enableCollison = true;                // Whether collision is enabled
+	bool borderless = false;                   // Whether borderless mode is active
+	bool renderButtonsMenu = true;             // Whether to render the buttons menu
+	bool deletedSomething = false;             // Whether an object was deleted
 
-	std::vector<std::pair<sf::Keyboard::Key, std::function<void()>>> keyActions;
+	// Key-action mappings
+	std::vector<std::pair<sf::Keyboard::Key, std::function<void()>>> keyActions; // Key-action pairs
 
 	// Physics and simulation parameters
-	float lineLength = 45;
-	ObjectsList objectList;
-	float deltaTime = 1.0f / 60.0f;
-	float elastic = 0.0;
-	int objCount = 0;
-	float radius = 50;
+	float lineLength = 45;                     // Default line length for connections
+	ObjectsList objectList;                    // List of objects in the simulation
+	float deltaTime = 1.0f / 60.0f;            // Time step for physics updates
+	float elastic = 0.0;                       // Elasticity for collisions
+	int objCount = 0;                          // Object count
+	float radius = 50;                         // Default radius for circles
 
 	// Mouse and interaction state
-	sf::Vector2f* previousMousePos = nullptr;
-	sf::Vector2f currentMousePos;
-	bool leftMouseClickFlag = false;
-	bool rightMouseClickFlag = false;
-	bool mouseFlagScrollUp = false;
-	bool mouseFlagScrollDown = false;
-	int mouseScrollPower = 5;
-	bool scaleFlag = false;
-	bool TouchedOnceLeftClick = false;
-	bool  TouchedOnceRightClick = false;
-	float moveSpeedScreen = 15.f;
-	bool freeze = false;
-	int typeOfLink = 1; //1 -> fixed. 2 -> non fixed. TODO: 3 -> loose/custom by user
-	float textureResizer = 1.2;
+	sf::Vector2f* previousMousePos = nullptr;  // Previous mouse position
+	sf::Vector2f currentMousePos;              // Current mouse position
+	bool leftMouseClickFlag = false;           // Left mouse button click flag
+	bool rightMouseClickFlag = false;          // Right mouse button click flag
+	bool mouseFlagScrollUp = false;            // Mouse scroll up flag
+	bool mouseFlagScrollDown = false;          // Mouse scroll down flag
+	int mouseScrollPower = 5;                  // Scroll power for scaling
+	bool scaleFlag = false;                    // Whether scaling is active
+	bool TouchedOnceLeftClick = false;         // Whether left click was touched once
+	bool TouchedOnceRightClick = false;        // Whether right click was touched once
+	float moveSpeedScreen = 15.f;              // Speed for moving the screen
+	bool freeze = false;                       // Whether the simulation is frozen
+	int typeOfLink = 1;                        // Type of link (1: fixed, 2: non-fixed, 3: custom)
+	float textureResizer = 1.2;                // Texture resizing factor
 
 	// Object pointers for interaction
-	BaseShape* thisBallPointer = nullptr;
-	BaseShape* previousBallPointer = nullptr;
-	BaseShape* connecttableBallPointer = nullptr;
-	BaseShape* previousConnecttableBallPointer = nullptr;
+	BaseShape* thisBallPointer = nullptr;      // Pointer to the currently selected object
+	BaseShape* previousBallPointer = nullptr;  // Pointer to the previously selected object
+	BaseShape* connecttableBallPointer = nullptr; // Pointer to the object being connected
+	BaseShape* previousConnecttableBallPointer = nullptr; // Pointer to the previously connected object
 
 	// Visual settings
-	sf::Color ball_color = sf::Color(238, 238, 238);
-	sf::Color proton_color = sf::Color(255, 222, 33);
-	sf::Color electron_color = sf::Color(106, 102, 157);
-	sf::Color ball_color2 = sf::Color(50, 5, 11);
-	sf::Color background_color = sf::Color(30, 30, 30);
-	sf::Color buttonColor = sf::Color(55, 58, 64);
-	sf::Color bb = sf::Color(44, 55, 100);
-	sf::Color explosionColor = sf::Color(205, 92, 8);
-	sf::Color outlineColor = sf::Color(255, 255, 255);
-	sf::Color previousColor = sf::Color(0, 0, 0);
-	sf::Color sideMenuColor = sf::Color(23, 23, 23, 204); //not solid color more transperent
-	sf::Color startColorGradient = sf::Color(128, 0, 128);  // purple
-	sf::Color endColorGradient =  sf::Color(0, 0, 255);      // blue
-	sf::Color startColorSlider = sf::Color(146, 0, 146);  // darker purple
-	sf::Color endColorSlider = sf::Color(66, 0, 66);  // even darker purple
+	sf::Color ball_color = sf::Color(238, 238, 238); // Default ball color
+	sf::Color proton_color = sf::Color(255, 222, 33); // Proton color
+	sf::Color electron_color = sf::Color(106, 102, 157); // Electron color
+	sf::Color ball_color2 = sf::Color(50, 5, 11); // Secondary ball color
+	sf::Color background_color = sf::Color(30, 30, 30); // Background color
+	sf::Color buttonColor = sf::Color(55, 58, 64); // Button color
+	sf::Color bb = sf::Color(44, 55, 100); // Additional color
+	sf::Color explosionColor = sf::Color(205, 92, 8); // Explosion color
+	sf::Color outlineColor = sf::Color(255, 255, 255); // Outline color
+	sf::Color previousColor = sf::Color(0, 0, 0); // Previous color for interaction
+	sf::Color sideMenuColor = sf::Color(23, 23, 23, 204); // Transparent side menu color
+	sf::Color startColorGradient = sf::Color(128, 0, 128); // Gradient start color (purple)
+	sf::Color endColorGradient = sf::Color(0, 0, 255); // Gradient end color (blue)
+	sf::Color startColorSlider = sf::Color(146, 0, 146); // Slider start color (dark purple)
+	sf::Color endColorSlider = sf::Color(66, 0, 66); // Slider end color (darker purple)
 
-	//Textures:
+	// Textures for buttons
 	sf::Texture addButtonTexture;
 	sf::Texture planetButtonTexture;
 	sf::Texture trashButtonTexture;
@@ -109,48 +114,48 @@ protected:
 	sf::Texture explosionButtonTexture;
 
 	// Gradient settings
-	short int gradientStep = 0;
-	short int gradientStepMax = 400;
-	std::vector<sf::Color> gradient;
+	short int gradientStep = 0;                // Current gradient step
+	short int gradientStepMax = 400;           // Maximum gradient steps
+	std::vector<sf::Color> gradient;           // Gradient colors
 
 	// UI Elements
-	sf::Font font;
-	sf::Text ballsCountText;
-	sf::Text fpsText;
-	sf::Text linkingText;
-	sf::RectangleShape sideMenuRec;
-	std::vector<Button> buttons;
+	sf::Font font;                             // Font for text
+	sf::Text ballsCountText;                   // Text for ball count
+	sf::Text fpsText;                          // Text for FPS
+	sf::Text linkingText;                      // Text for linking status
+	sf::RectangleShape sideMenuRec;            // Rectangle for the side menu
+	std::vector<Button> buttons;               // Buttons in the UI
 
-	//Sliders:
-	std::vector<Slider*> slidersVec;
-	Slider* gravitySlider = new Slider(300, 20, 200, 20, endColorSlider, startColorSlider, 0, 100);
-	Slider* collisionSlider = new Slider(550, 20, 200, 20, sf::Color::Red, explosionColor, 0, 100);
-	Slider* lineLengthSlider = new Slider(800, 20, 200, 20, sf::Color::Blue, sf::Color::Cyan, 0, 100);
+	// Sliders
+	std::vector<Slider*> slidersVec;           // Vector of sliders
+	Slider* gravitySlider = new Slider(300, 20, 200, 20, endColorSlider, startColorSlider, 0, 100); // Gravity slider
+	Slider* collisionSlider = new Slider(550, 20, 200, 20, sf::Color::Red, explosionColor, 0, 100); // Collision slider
+	Slider* lineLengthSlider = new Slider(800, 20, 200, 20, sf::Color::Blue, sf::Color::Cyan, 0, 100); // Line length slider
 
 	// Menu elements
-	sf::RectangleShape headerText;
-	std::vector<std::pair<Button, bool>> settingsButtonVec;
+	sf::RectangleShape headerText;             // Header text background
+	std::vector<std::pair<Button, bool>> settingsButtonVec; // Settings buttons
 
 	// Performance tracking
-	sf::Clock clock;
-	sf::Clock fpsClock;
-	int frameCount = 0;
-	float currentFPS = 0.0f;
+	sf::Clock clock;                           // Clock for frame timing
+	sf::Clock fpsClock;                        // Clock for FPS calculation
+	int frameCount = 0;                        // Frame count
+	float currentFPS = 0.0f;                   // Current FPS
 
 	// Object templates
-	Circle* copyObjCir;
-	RectangleClass* copyObjRec;
+	Circle* copyObjCir;                        // Template for circles
+	RectangleClass* copyObjRec;                // Template for rectangles
 
 	// Spawn settings
-	float posYStartingPoint = 200;
-	int posXStartingPoint = radius;
-	short int startingPointAdder = 31;
-	sf::Vector2f spawnStartingPoint;
-	sf::Vector2f initialVel = sf::Vector2f(0, 0);
+	float posYStartingPoint = 200;             // Y-coordinate for spawning objects
+	int posXStartingPoint = radius;            // X-coordinate for spawning objects
+	short int startingPointAdder = 31;         // Increment for spawning positions
+	sf::Vector2f spawnStartingPoint;           // Starting point for spawning
+	sf::Vector2f initialVel = sf::Vector2f(0, 0); // Initial velocity for spawned objects
 
-	//Electricity:
-	int particleType = 3;
-	sf::Vector2f electronInitialVel = sf::Vector2f(0, 0); // TODO : fix it
+	// Electricity settings
+	int particleType = 3;                      // Type of particle (e.g., proton, electron)
+	sf::Vector2f electronInitialVel = sf::Vector2f(0, 0); // Initial velocity for electrons
 
 #pragma endregion
 

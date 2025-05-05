@@ -30,7 +30,7 @@ public:
 		type = "Planet";
 	}
 
-
+	//For planet to planet interaction
 	sf::Vector2f GravitateAccurate(BaseShape* object) {
 		// Calculate the vector from this object to the other object
 		sf::Vector2f distanceVec = object->GetPosition() - GetPosition(); // Reversed direction

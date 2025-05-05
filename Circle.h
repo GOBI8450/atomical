@@ -42,27 +42,25 @@ public:
 		type = "Circle";
 	}
 
-	//update the position based on verlet integration.
-	void updatePosition_SubSteps(float dt, int subSteps) override{
-		const float subDt = dt / subSteps;
-		for (int i = subSteps; i > 0; i--)
-		{
-			updatePosition(subDt);
+	// Updates the position using Verlet integration with substeps
+	void updatePosition_SubSteps(float dt, int subSteps) override {
+		const float subDt = dt / subSteps; // Divide the time step into substeps
+		for (int i = subSteps; i > 0; i--) {
+			updatePosition(subDt); // Update the position for each substep
 		}
 	}
 
 
-	//update the position based on verlet integration.
-	void updatePosition(float dt) override
-	{
-		sf::Vector2f currentPos = getPosition();
-		sf::Vector2f newPos = currentPos + (currentPos - oldPosition) + acceleration * (dt * dt);
+	// Updates the position using Verlet integration
+	void updatePosition(float dt) override {
+		sf::Vector2f currentPos = getPosition(); // Get the current position
+		sf::Vector2f newPos = currentPos + (currentPos - oldPosition) + acceleration * (dt * dt); // Calculate the new position
 
-		// Update velocity
+		// Update velocity based on the new and old positions
 		velocity = (newPos - oldPosition) / (2 * dt);
 
-		oldPosition = currentPos;
-		setPosition(newPos);
+		oldPosition = currentPos; // Update the old position
+		setPosition(newPos); // Set the new position
 	}
 
 
@@ -101,23 +99,19 @@ public:
 		setPosition(pos);
 	}
 
+
+	// Calculates the distance between this circle and another circle
 	double DistanceOnly(Circle* otherShape) {
-		sf::Vector2f pos = GetPosition();       // Position of this shape
-		sf::Vector2f posOther = otherShape->GetPosition(); // Position of the other shape
-		double x1 = pos.x;
-		double y1 = pos.y;
-		double x2 = posOther.x;
-		double y2 = posOther.y;
-		return std::sqrt(std::pow((y2 - y1), 2) + std::pow((x2 - x1), 2)); // Return distance
+		sf::Vector2f pos = GetPosition(); // Position of this circle
+		sf::Vector2f posOther = otherShape->GetPosition(); // Position of the other circle
+		return std::sqrt(std::pow(posOther.y - pos.y, 2) + std::pow(posOther.x - pos.x, 2)); // Return the distance
 	}
 
+
+	// Calculates the distance between this circle and a specific point
 	double DistanceToPoint(sf::Vector2f posOther) {
-		sf::Vector2f pos = GetPosition();       // Position of this shape
-		double x1 = pos.x;
-		double y1 = pos.y;
-		double x2 = posOther.x;
-		double y2 = posOther.y;
-		return std::sqrt(std::pow((y2 - y1), 2) + std::pow((x2 - x1), 2)); // Return distance
+		sf::Vector2f pos = GetPosition(); // Position of this circle
+		return std::sqrt(std::pow(posOther.y - pos.y, 2) + std::pow(posOther.x - pos.x, 2)); // Return the distance
 	}
 
 	//Checks if there is any collision between two balls
@@ -129,17 +123,12 @@ public:
 		return false;
 	}
 
+	// Checks if a point is within the radius of the circle
 	bool IsInRadius(sf::Vector2f pos) {
-		// Get the actual position of the circle (considering its center)
-		sf::Vector2f circleCenter = GetPosition();
-
-		// Calculate distance between point and circle center
-		float dx = pos.x - circleCenter.x;
-		float dy = pos.y - circleCenter.y;
-		float distanceSquared = dx * dx + dy * dy;
-
-		// Check if point is within circle
-		return distanceSquared <= (radius * radius);
+		sf::Vector2f circleCenter = GetPosition(); // Get the center of the circle
+		float dx = pos.x - circleCenter.x; // Calculate the x-distance
+		float dy = pos.y - circleCenter.y; // Calculate the y-distance
+		return (dx * dx + dy * dy) <= (radius * radius); // Check if the point is within the circle
 	}
 
 	//The collision handeling is done by seperating the two circles with a vector between the two of them, and the overlap of them. the speed that will be created is done by verlet integretion
@@ -254,11 +243,12 @@ public:
 		}
 	}
 
-	//Set the radius to a new one, and centers the origin point according to the new radius
+
+	// Sets the radius and centers the origin point according to the new radius
 	void SetRadiusAndCenter(int newRadius) {
-		setRadius(newRadius);
-		radius = newRadius;
-		setOrigin(sf::Vector2f(radius, radius));
+		setRadius(newRadius); // Update the radius
+		radius = newRadius; // Store the new radius
+		setOrigin(sf::Vector2f(radius, radius)); // Center the origin point
 	}
 
 	// Set shape color
@@ -268,29 +258,32 @@ public:
 		setFillColor(newColor);
 	}
 
-	void SetPosition(sf::Vector2f newPos) override
-	{
+	// Sets the position of the circle
+	void SetPosition(sf::Vector2f newPos) override {
 		setPosition(newPos);
 	}
 
-	void SetRadius(float newRadius)
-	{
+	// Sets the radius of the circle
+	void SetRadius(float newRadius) {
 		setRadius(newRadius);
 		radius = newRadius;
 		setOrigin(sf::Vector2f(radius, radius));
 	}
 
+	// Gets the radius of the circle
 	float GetRadius() {
 		return radius;
 	}
 
+	// Gets the position of the circle
 	sf::Vector2f GetPosition() const override {
 		return getPosition();
 	}
 
+	// Gets the position of the circle as a string
 	std::string GetPositionStr() const override {
 		std::stringstream ss;
-		ss << "X=" << GetPosition().x << "Y=" << GetPosition().y;
+		ss << "X=" << GetPosition().x << "Y=" << GetPosition().y; // Format the position as a string
 		return ss.str();
 	}
 
@@ -299,6 +292,7 @@ public:
 		setOutlineColor(color);
 	}
 
+	// Converts the circle's properties to a string representation
 	std::string ToString() const override {
 		std::stringstream ss;
 
@@ -310,17 +304,18 @@ public:
 		return ss.str();
 	}
 
-	sf::FloatRect GetGlobalBounds()  override {
+	// Gets the global bounds of the circle (used for collision detection or rendering)
+	sf::FloatRect GetGlobalBounds() override {
 		return getGlobalBounds();
 	}
 
+	// Gets an estimated size of the circle (used for spatial partitioning or other calculations)
 	float GetEstimatedSize() override {
 		return radius;
 	}
 
-	// Function to draw the circle
-	void draw(sf::RenderWindow& window)
-	{
+	// Draws the circle on the provided SFML window
+	void draw(sf::RenderWindow& window) {
 		window.draw(*this);
 	}
 };

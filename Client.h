@@ -34,6 +34,7 @@ public:
 		InitializeKeyActions();
 	}
 
+	// the main function to run the client
 	std::string Run() override{
 		currentMousePos = window.mapPixelToCoords(sf::Mouse::getPosition(window), view);
 		handleAllEvents();
@@ -41,6 +42,7 @@ public:
 		return screen;
 	}
 
+	// translate messages from the server
 	void TranslateMessage(const std::string& message) override {
 		// Check if the message contains serialized shapes
 		if (message.length() > 1 && message[0] == '$') {
@@ -72,6 +74,7 @@ public:
 		}
 	}
 
+	// reset the simulation
 	void Restart() override{
 		objectList.DeleteAll();
 		//deletedSomething = true;
@@ -96,119 +99,142 @@ public:
 	}
 
 private:
+	// Essential variables for the client simulation
 #pragma region EssantialVariables
-	sf::VideoMode desktopSize = sf::VideoMode::getDesktopMode();
-	int window_height = options.window_height;
-	int window_width = options.window_width;
-	bool fullscreen = options.fullscreen;
-	int oldGravity = options.gravity;
-	double massLock = options.massLock;
+
+// Screen and window settings
+	sf::VideoMode desktopSize = sf::VideoMode::getDesktopMode(); // Get the desktop resolution
+	int window_height = options.window_height;                  // Window height from options
+	int window_width = options.window_width;                    // Window width from options
+	bool fullscreen = options.fullscreen;                       // Fullscreen mode flag
+	int oldGravity = options.gravity;                           // Previous gravity value
+	double massLock = options.massLock;                         // Mass lock for objects (restricts mass changes)
 
 	// Window and view settings
-	sf::RenderWindow& window;
-	sf::View view;
-	sf::ContextSettings settings;
-	const float ZOOM_FACTOR = 1.5f;
-	// Cursors
-	sf::Cursor handCursor;
-	sf::Cursor defaultCursor;
-	std::string screen = "ONLINE";
-	bool hovering = false;
-	bool connectingMode = false;
-	bool createConnectedObjMode = false;
-	bool createChain = false;
-	bool planetMode = false;
-	bool enableCollison = false;
-	bool borderless = true;
-	bool renderButtonsMenu = true;
-	std::vector<std::pair<sf::Keyboard::Key, std::function<void()>>> keyActions;
-	// Physics and simulation parameters
-	float lineLength = 45;
-	ObjectsList objectList;
-	float deltaTime = 1.0f / 60.0f;
-	float elastic = 0.0;
-	int objCount = 0;
-	float radius = 50;
-	// Mouse and interaction state
-	sf::Vector2f* previousMousePos = nullptr;
-	sf::Vector2f currentMousePos;
-	bool leftMouseClickFlag = false;
-	bool rightMouseClickFlag = false;
-	int mouseFlagScroll = 0;
-	bool mouseFlagScrollUp = false;
-	bool mouseFlagScrollDown = false;
-	int mouseScrollPower = 5;
-	bool scaleFlag = false;
-	bool TouchedOnceLeftClick = false;
-	bool TouchedOnceRightClick = false;
-	float moveSpeedScreen = 15.f;
-	bool freeze = false;
-	int typeOfLink = 1;
-	float textureResizer = 1.2;
-	// Object pointers for interaction
-	BaseShape* thisBallPointer = nullptr;
-	int previousBallID = -1;
-	int thisObjID = -1;
-	BaseShape* connecttableBallPointer = nullptr;
-	int connecttableObjID = -1;
-	int previousConnecttableObjID = -1;
-	// Visual settings
-	sf::Color ball_color = sf::Color(238, 238, 238);
-	sf::Color proton_color = sf::Color(255, 222, 33);
-	sf::Color electron_color = sf::Color(106, 102, 157);
-	sf::Color ball_color2 = sf::Color(50, 5, 11);
-	sf::Color background_color = sf::Color(30, 30, 30);
-	sf::Color buttonColor = sf::Color(55, 58, 64);
-	sf::Color bb = sf::Color(44, 55, 100);
-	sf::Color explosion = sf::Color(205, 92, 8);
-	sf::Color outlineColor = sf::Color(255, 255, 255);
-	sf::Color previousColor = sf::Color(0, 0, 0);
-	sf::Color sideMenuColor = sf::Color(23, 23, 23, 204);
-	sf::Color startColor = sf::Color(128, 0, 128);  // purple
-	sf::Color endColor = sf::Color(0, 0, 255);      // blue
+	sf::RenderWindow& window;                                   // Reference to the main render window
+	sf::View view;                                              // View for rendering the simulation
+	sf::ContextSettings settings;                               // Context settings for the window (e.g., anti-aliasing)
+	const float ZOOM_FACTOR = 1.5f;                             // Zoom factor for the view (used for scaling)
 
-	//Textures:
-	sf::Texture addButtonTexture;
-	sf::Texture planetButtonTexture;
-	sf::Texture trashButtonTexture;
-	sf::Texture connectButtonTexture;
-	sf::Texture chainButtonTexture;
-	sf::Texture paticleButtonTexture;
-	sf::Texture explosionButtonTexture;
+	// Cursor settings
+	sf::Cursor handCursor;                                      // Hand cursor for interaction
+	sf::Cursor defaultCursor;                                   // Default arrow cursor
+
+	// Screen state
+	std::string screen = "ONLINE";                              // Current screen state (e.g., ONLINE, MENU)
+
+	// Interaction flags
+	bool hovering = false;                                      // Whether the mouse is hovering over an object
+	bool connectingMode = false;                                // Whether connecting mode is active
+	bool createConnectedObjMode = false;                       // Whether creating connected objects is active
+	bool createChain = false;                                   // Whether chain creation mode is active
+	bool planetMode = false;                                    // Whether planet creation mode is active
+	bool enableCollison = false;                                // Whether collision detection is enabled
+	bool borderless = true;                                     // Whether the simulation runs in borderless mode
+	bool renderButtonsMenu = true;                              // Whether to render the buttons menu
+
+	// Key-action mappings
+	std::vector<std::pair<sf::Keyboard::Key, std::function<void()>>> keyActions; // Key-action pairs for handling input
+
+	// Physics and simulation parameters
+	float lineLength = 45;                                      // Default line length for connections
+	ObjectsList objectList;                                     // List of objects in the simulation
+	float deltaTime = 1.0f / 60.0f;                             // Time step for physics updates (60 FPS)
+	float elastic = 0.0;                                        // Elasticity for collisions (0 = inelastic, 1 = fully elastic)
+	int objCount = 0;                                           // Total number of objects in the simulation
+	float radius = 50;                                          // Default radius for circles
+
+	// Mouse and interaction state
+	sf::Vector2f* previousMousePos = nullptr;                  // Previous mouse position
+	sf::Vector2f currentMousePos;                              // Current mouse position
+	bool leftMouseClickFlag = false;                           // Left mouse button click flag
+	bool rightMouseClickFlag = false;                          // Right mouse button click flag
+	int mouseFlagScroll = 0;                                   // Mouse scroll direction (1: up, -1: down)
+	bool mouseFlagScrollUp = false;                            // Mouse scroll up flag
+	bool mouseFlagScrollDown = false;                          // Mouse scroll down flag
+	int mouseScrollPower = 5;                                  // Scroll power for scaling
+	bool scaleFlag = false;                                    // Whether scaling is active
+	bool TouchedOnceLeftClick = false;                         // Whether left click was touched once
+	bool TouchedOnceRightClick = false;                        // Whether right click was touched once
+	float moveSpeedScreen = 15.f;                              // Speed for moving the screen
+	bool freeze = false;                                       // Whether the simulation is frozen
+	int typeOfLink = 1;                                        // Type of link (1: fixed, 2: non-fixed)
+	float textureResizer = 1.2;                                // Texture resizing factor
+
+	// Object pointers for interaction
+	BaseShape* thisBallPointer = nullptr;                      // Pointer to the currently selected object
+	int previousBallID = -1;                                   // ID of the previously selected object
+	int thisObjID = -1;                                        // ID of the currently selected object
+	BaseShape* connecttableBallPointer = nullptr;              // Pointer to the object being connected
+	int connecttableObjID = -1;                                // ID of the object being connected
+	int previousConnecttableObjID = -1;                        // ID of the previously connected object
+
+	// Visual settings
+	sf::Color ball_color = sf::Color(238, 238, 238);           // Default ball color
+	sf::Color proton_color = sf::Color(255, 222, 33);          // Proton color
+	sf::Color electron_color = sf::Color(106, 102, 157);       // Electron color
+	sf::Color ball_color2 = sf::Color(50, 5, 11);              // Secondary ball color
+	sf::Color background_color = sf::Color(30, 30, 30);        // Background color
+	sf::Color buttonColor = sf::Color(55, 58, 64);             // Button color
+	sf::Color bb = sf::Color(44, 55, 100);                     // Additional color for UI
+	sf::Color explosion = sf::Color(205, 92, 8);               // Explosion color
+	sf::Color outlineColor = sf::Color(255, 255, 255);         // Outline color for objects
+	sf::Color previousColor = sf::Color(0, 0, 0);              // Previous color for interaction
+	sf::Color sideMenuColor = sf::Color(23, 23, 23, 204);      // Transparent side menu color
+	sf::Color startColor = sf::Color(128, 0, 128);             // Gradient start color (purple)
+	sf::Color endColor = sf::Color(0, 0, 255);                 // Gradient end color (blue)
+
+	// Textures for buttons
+	sf::Texture addButtonTexture;                              // Texture for the "Add" button
+	sf::Texture planetButtonTexture;                           // Texture for the "Planet" button
+	sf::Texture trashButtonTexture;                            // Texture for the "Trash" button
+	sf::Texture connectButtonTexture;                          // Texture for the "Connect" button
+	sf::Texture chainButtonTexture;                            // Texture for the "Chain" button
+	sf::Texture paticleButtonTexture;                          // Texture for the "Particle" button
+	sf::Texture explosionButtonTexture;                        // Texture for the "Explosion" button
+
 	// Gradient settings
-	short int gradientStep = 0;
-	short int gradientStepMax = 400;
-	std::vector<sf::Color> gradient;
+	short int gradientStep = 0;                                // Current gradient step for color transitions
+	short int gradientStepMax = 400;                           // Maximum gradient steps
+	std::vector<sf::Color> gradient;                           // Gradient colors for visual effects
+
 	// UI Elements
-	sf::Font font;
-	sf::Text linkingText;
-	sf::RectangleShape sideMenuRec;
-	std::vector<Button> buttons;
+	sf::Font font;                                             // Font for rendering text
+	sf::Text linkingText;                                      // Text for displaying linking status
+	sf::RectangleShape sideMenuRec;                            // Rectangle for the side menu
+	std::vector<Button> buttons;                               // Buttons in the UI
+
 	// Menu elements
-	sf::RectangleShape headerText;
-	std::vector<std::pair<Button, bool>> settingsButtonVec;
+	sf::RectangleShape headerText;                             // Rectangle for the header text background
+	std::vector<std::pair<Button, bool>> settingsButtonVec;    // Vector of settings buttons and their states
+
 	// Performance tracking
-	sf::Clock clock;
-	sf::Clock fpsClock;
-	int frameCount = 0;
-	float currentFPS = 0.0f;
+	sf::Clock clock;                                           // Clock for frame timing
+	sf::Clock fpsClock;                                        // Clock for FPS calculation
+	int frameCount = 0;                                        // Frame count for FPS tracking
+	float currentFPS = 0.0f;                                   // Current FPS value
+
 	// Object templates
-	Circle* copyObjCir;
-	RectangleClass* copyObjRec;
+	Circle* copyObjCir;                                        // Template for creating new circles
+	RectangleClass* copyObjRec;                                // Template for creating new rectangles
+
 	// Spawn settings
-	float posYStartingPoint = 200;
-	int posXStartingPoint = radius;
-	short int startingPointAdder = 31;
-	sf::Vector2f spawnStartingPoint;
-	sf::Vector2f initialVel = sf::Vector2f(0, 0);
-	//Electricity:
-	int particleType = 3;
-	sf::Vector2f electronInitialVel = sf::Vector2f(0, 0);
+	float posYStartingPoint = 200;                             // Y-coordinate for spawning objects
+	int posXStartingPoint = radius;                            // X-coordinate for spawning objects
+	short int startingPointAdder = 31;                         // Increment for spawning positions
+	sf::Vector2f spawnStartingPoint;                           // Starting point for spawning objects
+	sf::Vector2f initialVel = sf::Vector2f(0, 0);              // Initial velocity for spawned objects
+
+	// Electricity settings
+	int particleType = 3;                                      // Type of particle (e.g., proton, electron)
+	sf::Vector2f electronInitialVel = sf::Vector2f(0, 0);      // Initial velocity for electrons
+
 #pragma endregion
 
 
 
-	//Local:
+	//Local Functions:
+	// handles mouse click
 	void handleMouseClick() override {
 		//Left click:
 		if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && !leftMouseClickFlag) {
@@ -252,6 +278,7 @@ private:
 		}
 	}
 
+	// handle mouse release
 	void handleMouseRelase(sf::Event event) override {
 		//Left mouse button:
 		if (event.type == sf::Event::MouseButtonReleased) {
@@ -277,6 +304,7 @@ private:
 		}
 	}
 
+	// handle mouse interaction
 	void handleMouseInteraction() override {
 		if (leftMouseClickFlag && thisBallPointer != nullptr) {
 			// Set position of the found ball
@@ -296,6 +324,7 @@ private:
 		}
 	}
 
+	// hand mouse wheel events
 	void handleMouseWheel(sf::Event event) override {
 		if (event.type == sf::Event::MouseWheelScrolled) {
 			if (event.mouseWheelScroll.wheel == sf::Mouse::VerticalWheel) {
@@ -322,12 +351,14 @@ private:
 		}
 	}
 
+	// toggle connecting mode
 	void toggleConnectingMode() override {
 		connectingMode = !connectingMode;
 		linkingText.setString(connectingMode ? "ACTIVATED" : "DEACTIVATED");
 		linkingText.setFillColor(connectingMode ? sf::Color::Magenta : sf::Color::White);
 	}
 
+	// handle key press events
 	void handleEventsFromPollEvent(sf::Event event) override {
 		if (event.type == sf::Event::Closed) { window.close(); } // need to do that it will close the connection
 		handleKeyPress(event);
@@ -335,6 +366,7 @@ private:
 		handleMouseWheel(event);
 	}
 
+	// handle all events in the client
 	void handleAllEvents() override {
 		sf::Event event;
 		while (window.pollEvent(event)) {
@@ -345,6 +377,7 @@ private:
 		handleMouseInteraction();
 	}
 
+	// initialize key actions
 	void InitializeKeyActions() {
 		// ** General Actions **
 		keyActions.push_back({ sf::Keyboard::Escape, [&]() {
@@ -457,11 +490,13 @@ private:
 		} });
 	}
 
+	// toggle chain mode
 	void ToggleChainMode() {
 		createChain = !createChain;
 		previousBallID = thisBallPointer->GetID();
 	}
 
+	// handle key press events
 	void handleKeyPress(sf::Event event) override {
 		if (event.type == sf::Event::KeyPressed) {
 			for (const auto& [key, action] : keyActions) {
@@ -473,6 +508,7 @@ private:
 		}
 	}
 
+	// handle scaling
 	void handleScaling() override {
 		if (scaleFlag && (mouseFlagScroll == 1 || mouseFlagScroll == -1)) {
 			if (Circle* circle = dynamic_cast<Circle*>(thisBallPointer)) {
@@ -486,6 +522,7 @@ private:
 		}
 	}
 
+	// handle connecting
 	void handleConnecting() override {
 		if (connectingMode && connecttableBallPointer->GetID() != previousConnecttableObjID)
 		{
@@ -496,12 +533,14 @@ private:
 	}
 
 #pragma region Convertors
+	// Convert sf::Vector2i to string
 	std::string Vector2iToString(const sf::Vector2i& vector) {
 		std::ostringstream oss;  // create a string stream
 		oss << "(" << vector.x << ", " << vector.y << ")";  // format the vector as a string
 		return oss.str();  // return the formatted string
 	}
 
+	// Convert sf::Vector2f to string
 	std::string Vector2fToString(const sf::Vector2f& vector) {
 		std::ostringstream oss;  // create a string stream
 		oss << "(" << vector.x << ", " << vector.y << ")";  // format the vector as a string
@@ -510,6 +549,7 @@ private:
 #pragma endregion 
 
 #pragma region Viusals
+	// toogle fullscreen mode
 	void toggleFullscreen(sf::RenderWindow& window) {
 		if (!options.fullscreen) {
 			window.create(options.desktopSize, "Fullscreen Mode", sf::Style::Fullscreen);
@@ -522,6 +562,7 @@ private:
 		window.setVerticalSyncEnabled(true);
 	}
 
+	// render the simulation
 	void renderSimulation() override {
 		updateFPS();
 		window.clear(background_color);
@@ -543,15 +584,18 @@ private:
 		////std::cout << "\033[0m";
 	}
 
+	// move and draw objects on screen
 	void MoveAndDrawObjects() override {
 		objectList.DrawObjects(window, currentFPS, planetMode);
 	}
 
+	// initialize the UI
 	void initializeUI() override {
 		setupText();
 		SetupHeaders();
 	}
 
+	// initialize the cursor pictures
 	void initializeCursors() override {
 		if (!defaultCursor.loadFromSystem(sf::Cursor::Arrow) ||
 			!handCursor.loadFromSystem(sf::Cursor::Hand)) {
@@ -560,6 +604,7 @@ private:
 		window.setMouseCursor(defaultCursor);
 	}
 
+	// load resources like fonts
 	void loadResources() override {
 		if (!font.loadFromFile("visuals/font.ttf")) {
 			throw std::runtime_error("Failed to load font");
@@ -567,6 +612,7 @@ private:
 		loadTextures();
 	}
 
+	// load textures 
 	void loadTextures() override {
 		// Since no textures are used in the original code, this method is kept minimal
 		// but provides a hook for future texture loading if needed
@@ -585,6 +631,7 @@ private:
 		}
 	}
 
+	// update the FPS
 	void updateFPS() override {
 		frameCount++;
 		float timeElapsed = fpsClock.getElapsedTime().asSeconds();
@@ -596,6 +643,7 @@ private:
 		}
 	}
 
+	//setup the text
 	void setupText() override {
 		// Linking Text
 		linkingText.setFont(font);
@@ -605,6 +653,7 @@ private:
 		linkingText.setPosition(10, 10);
 	}
 
+	// setup the header text
 	void SetupHeaders() override {
 		headerText.setSize(sf::Vector2f(400.f, 100.f));
 		headerText.setPosition(
@@ -614,6 +663,7 @@ private:
 		headerText.setFillColor(buttonColor);
 	}
 
+	// render the texts on the screen
 	void renderTexts() override {
 		std::ostringstream fpsStream;
 		std::ostringstream ballCountStream;
@@ -624,6 +674,7 @@ private:
 		window.draw(linkingText);
 	}
 
+	// limit the frame rate
 	void limitFrameRate() override {
 		sf::Time elapsed = clock.restart();
 		if (elapsed.asSeconds() < deltaTime) {
@@ -631,10 +682,12 @@ private:
 		}
 	}
 
+	// set the current screen
 	void SetScreen(std::string newScreen) override {
 		screen = newScreen;
 	}
 
+	// convert the objects for sending
 	std::vector<BaseShape> ConvertForSending() override {
 		return std::vector<BaseShape>();
 	}

@@ -4,6 +4,7 @@
 #pragma once
 #include <SFML/Graphics.hpp>
 
+//The starting settings for the simulation
 struct Options {
 	sf::VideoMode desktopSize = sf::VideoMode::getDesktopMode();
 	int window_height = 1080;

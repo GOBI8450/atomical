@@ -61,11 +61,13 @@ public:
 			value = minValue + percentage * (maxValue - minValue);
 	}
 
+	// Function to check if the mouse is within the slider handle area.
 	bool containMouse(sf::Vector2f mousePos) {
 		sf::FloatRect sliderBounds(sliderX, sliderY, barWidth, barHeight);
 		return sliderBounds.contains(mousePos);
 	}
 
+	// Function to handle mouse movement while dragging.
 	void handleMoving(const sf::RenderWindow& window, sf::Vector2f mousePos) {
 		if (isDragging) {
 			targetHandleX = mousePos.x;
@@ -76,6 +78,7 @@ public:
 		}
 	}
 
+	// Function to handle mouse release event.
 	void handleRelase() {
 		isDragging = false;
 	}
@@ -102,7 +105,7 @@ public:
 		handleShadow.setPosition(currentHandleX + 3, handleY + 3);
 	}
 
-
+	// Function to draw the slider on the window.
 	void draw(sf::RenderWindow& window) {
 		// Draw the base (black) bar.
 		window.draw(baseBar);
@@ -114,10 +117,12 @@ public:
 		window.draw(handle);
 	}
 
+	// Getters and setters for the slider value.
 	float getValue() const {
 		return value;
 	}
 
+	// Set the value of the slider, clamping it within the min and max range.
 	void setValue(float newValue) {
 		// Clamp value within the min and max range
 		if (newValue < minValue) newValue = minValue;
