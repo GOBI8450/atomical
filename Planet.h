@@ -30,6 +30,8 @@ public:
 		type = "Planet";
 	}
 
+	virtual ~Planet() = default;
+
 	//For planet to planet interaction
 	sf::Vector2f GravitateAccurate(BaseShape* object) {
 		// Calculate the vector from this object to the other object

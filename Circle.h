@@ -42,6 +42,8 @@ public:
 		type = "Circle";
 	}
 
+	virtual ~Circle() = default;
+
 	// Updates the position using Verlet integration with substeps
 	void updatePosition_SubSteps(float dt, int subSteps) override {
 		const float subDt = dt / subSteps; // Divide the time step into substeps

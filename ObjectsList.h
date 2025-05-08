@@ -54,11 +54,11 @@ public:
 		electricalParticlesList.clear();
 		objCount = 0;
 		grid->clear();
-		std::cout << "After DeleteAll: "
-			<< "objList = " << objList.size()
-			<< ", fixedObjects = " << fixedObjects.size()
-			<< ", electricalParticlesList = " << electricalParticlesList.size()
-			<< std::endl;
+		//std::cout << "After DeleteAll: "
+		//	<< "objList = " << objList.size()
+		//	<< ", fixedObjects = " << fixedObjects.size()
+		//	<< ", electricalParticlesList = " << electricalParticlesList.size()
+		//	<< std::endl;
 	}
 
 	// Creates a new circle object with specified properties and adds it to the object list

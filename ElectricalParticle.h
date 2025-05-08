@@ -45,6 +45,8 @@ public:
         type = "ElectPart"; // Set the type to "ElectricalParticle"
     }
 
+    virtual ~ElectricalParticle() = default;
+
     // Gets the charge of the particle
     double GetCharge() {
         return charge;

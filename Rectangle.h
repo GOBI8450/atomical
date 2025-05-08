@@ -52,6 +52,8 @@ public:
 		momentOfInertia = (mass * (width * width + height * height)) / 12.0f;
 	}
 
+	virtual ~RectangleClass() = default;
+
 	// Updates the position using Verlet integration with substeps
 	void updatePosition_SubSteps(float dt, int numSubsteps) override
 	{
