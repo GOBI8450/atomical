@@ -5,7 +5,7 @@ class Slider {
 public:
 	Slider(float x, float y, float width, float height,
 		sf::Color startColor, sf::Color endColor,
-		float minValue, float maxValue)
+		float minValue, float maxValue, bool hueSlider)
 		: sliderX(x), sliderY(y), barWidth(width), barHeight(height),
 		minValue(minValue), maxValue(maxValue), value(minValue), isDragging(false),
 		smoothingFactor(0.2f)
@@ -17,7 +17,15 @@ public:
 
 		// Set up the gradient fill bar.
 		// Initially, the filled portion is 0 width (i.e. no fill).
-		gradientBar = sf::VertexArray(sf::Quads, 4);
+		if (hueSlider)
+		{
+			buildHueGradient();
+		}
+		else
+		{
+			gradientBar = sf::VertexArray(sf::Quads, 4);
+		}
+		gradientBar[0].position = sf::Vector2f(sliderX, sliderY);
 		gradientBar[0].position = sf::Vector2f(sliderX, sliderY);
 		gradientBar[1].position = sf::Vector2f(sliderX, sliderY);
 		gradientBar[2].position = sf::Vector2f(sliderX, sliderY + barHeight);
@@ -51,7 +59,7 @@ public:
 		currentHandleX = targetHandleX;
 	}
 
-	void handleClick(const sf::RenderWindow& window, sf::Vector2f mousePos) {
+	void handleClick(sf::Vector2f mousePos) {
 		// Start dragging if the click is within the slider bar area.
 			isDragging = true;
 			targetHandleX = mousePos.x;
@@ -62,8 +70,8 @@ public:
 	}
 
 	// Function to check if the mouse is within the slider handle area.
-	bool containMouse(sf::Vector2f mousePos) {
-		sf::FloatRect sliderBounds(sliderX, sliderY, barWidth, barHeight);
+	bool containMouse(sf::Vector2f mousePos, float howMuchZoomed) {
+		sf::FloatRect sliderBounds(sliderX / howMuchZoomed, sliderY / howMuchZoomed,  barWidth / howMuchZoomed, barHeight / howMuchZoomed);
 		return sliderBounds.contains(mousePos);
 	}
 
@@ -141,6 +149,65 @@ public:
 		float percentage = (value - minValue) / (maxValue - minValue);
 		targetHandleX = sliderX + percentage * barWidth;
 	}
+
+	sf::Color hueToRGB(float hue) {
+		hue = fmod(hue, 360.f);
+		if (hue < 0) hue += 360.f;
+
+		float c = 1.0f;
+		float x = 1.0f - fabs(fmod(hue / 60.f, 2.f) - 1.0f);
+
+		float r = 0, g = 0, b = 0;
+		if (hue < 60) { r = c; g = x; b = 0; }
+		else if (hue < 120) { r = x; g = c; b = 0; }
+		else if (hue < 180) { r = 0; g = c; b = x; }
+		else if (hue < 240) { r = 0; g = x; b = c; }
+		else if (hue < 300) { r = x; g = 0; b = c; }
+		else { r = c; g = 0; b = x; }
+
+		return sf::Color(
+			static_cast<sf::Uint8>(r * 255),
+			static_cast<sf::Uint8>(g * 255),
+			static_cast<sf::Uint8>(b * 255)
+		);
+	}
+
+	sf::Color getValueColor() {
+		return hueToRGB(value); // value is in [0, 360]
+	}
+
+	void buildHueGradient() {
+		const int steps = 36; // 10-degree steps over 360°
+		gradientBar = sf::VertexArray(sf::Quads, steps * 4);
+
+		for (int i = 0; i < steps; ++i) {
+			float hue1 = (i * 360.0f) / steps;
+			float hue2 = ((i + 1) * 360.0f) / steps;
+
+			sf::Color color1 = hueToRGB(hue1);
+			sf::Color color2 = hueToRGB(hue2);
+
+			float x1 = sliderX + (i * barWidth) / steps;
+			float x2 = sliderX + ((i + 1) * barWidth) / steps;
+
+			// Top-left
+			gradientBar[i * 4 + 0].position = sf::Vector2f(x1, sliderY);
+			gradientBar[i * 4 + 0].color = color1;
+
+			// Top-right
+			gradientBar[i * 4 + 1].position = sf::Vector2f(x2, sliderY);
+			gradientBar[i * 4 + 1].color = color2;
+
+			// Bottom-right
+			gradientBar[i * 4 + 2].position = sf::Vector2f(x2, sliderY + barHeight);
+			gradientBar[i * 4 + 2].color = color2;
+
+			// Bottom-left
+			gradientBar[i * 4 + 3].position = sf::Vector2f(x1, sliderY + barHeight);
+			gradientBar[i * 4 + 3].color = color1;
+		}
+	}
+
 
 private:
 	// Slider bar representation.

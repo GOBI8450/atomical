@@ -78,7 +78,7 @@ public:
 		std::uniform_int_distribution<int> radiusRange(20, 20); // Fixed radius range
 		sf::Vector2f position(pos);
 		int randomRadius = radiusRange(rnd);
-		int mass = randomRadius * 3; // Arbitrary mass calculation
+		double mass = randomRadius * 3; // Arbitrary mass calculation
 		objCount += 1;
 		BaseShape* ball = new Circle(randomRadius, color, position, 0, mass, sf::Vector2f(0, 0), objCount);
 		objList.push_back(ball);
@@ -502,10 +502,11 @@ public:
 			ball->updatePosition_SubSteps(dt, subSteps);
 		}
 
-		// Reset fixed objects to their previous state (immobile)
+		// Reset fixed objects to their previous state so they stay fixed
 		for (auto& ball : fixedObjects) {
 			ball->SetPosition(ball->GetOldPosition());
 			ball->SetAcceleration(sf::Vector2f(0, 0));
+			ball->SetVelocity(sf::Vector2f(0, 0));
 		}
 	}
 };

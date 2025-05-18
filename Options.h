@@ -11,7 +11,8 @@ struct Options {
 	int window_width = 1920;
 	bool fullscreen = false;
 	float gravity = 9.8;
-	double massLock = 0;
+	double massLock = 0; 
+	int explosionColor = 26;
 };
 
 extern Options options; 

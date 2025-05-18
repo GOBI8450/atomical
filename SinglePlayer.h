@@ -34,7 +34,8 @@ protected:
 	sf::RenderWindow& window;                  // Reference to the main render window
 	sf::View view;                             // View for rendering
 	sf::ContextSettings settings;              // Context settings for the window
-	const float ZOOM_FACTOR = 1.5f;            // Zoom factor for the view
+	const float zoomFactor = 1.5f;            // Zoom factor for the view
+	float howMuchZoomed = 1;            // Zoom value
 
 	// Cursor settings
 	sf::Cursor handCursor;                     // Hand cursor for interaction
@@ -76,7 +77,7 @@ protected:
 	bool scaleFlag = false;                    // Whether scaling is active
 	bool TouchedOnceLeftClick = false;         // Whether left click was touched once
 	bool TouchedOnceRightClick = false;        // Whether right click was touched once
-	float moveSpeedScreen = 15.f;              // Speed for moving the screen
+	float moveSpeedScreen = 30.f;              // Speed for moving the screen
 	bool freeze = false;                       // Whether the simulation is frozen
 	int typeOfLink = 1;                        // Type of link (1: fixed, 2: non-fixed, 3: custom)
 	float textureResizer = 1.2;                // Texture resizing factor
@@ -94,8 +95,6 @@ protected:
 	sf::Color ball_color2 = sf::Color(50, 5, 11); // Secondary ball color
 	sf::Color background_color = sf::Color(30, 30, 30); // Background color
 	sf::Color buttonColor = sf::Color(55, 58, 64); // Button color
-	sf::Color bb = sf::Color(44, 55, 100); // Additional color
-	sf::Color explosionColor = sf::Color(205, 92, 8); // Explosion color
 	sf::Color outlineColor = sf::Color(255, 255, 255); // Outline color
 	sf::Color previousColor = sf::Color(0, 0, 0); // Previous color for interaction
 	sf::Color sideMenuColor = sf::Color(23, 23, 23, 204); // Transparent side menu color
@@ -108,8 +107,6 @@ protected:
 	sf::Texture addButtonTexture;
 	sf::Texture planetButtonTexture;
 	sf::Texture trashButtonTexture;
-	sf::Texture connectButtonTexture;
-	sf::Texture chainButtonTexture;
 	sf::Texture paticleButtonTexture;
 	sf::Texture explosionButtonTexture;
 
@@ -128,9 +125,9 @@ protected:
 
 	// Sliders
 	std::vector<Slider*> slidersVec;           // Vector of sliders
-	Slider* gravitySlider = new Slider(300, 20, 200, 20, endColorSlider, startColorSlider, 0, 100); // Gravity slider
-	Slider* collisionSlider = new Slider(550, 20, 200, 20, sf::Color::Red, explosionColor, 0, 100); // Collision slider
-	Slider* lineLengthSlider = new Slider(800, 20, 200, 20, sf::Color::Blue, sf::Color::Cyan, 0, 100); // Line length slider
+	Slider* gravitySlider = new Slider(300, 20, 200, 20, endColorSlider, startColorSlider, 0, 100, false); // Gravity slider
+	Slider* colorSlider = new Slider(550, 20, 200, 20, sf::Color(0,0,0), sf::Color(255, 255, 255), 0, 360, true); // Color slider
+	Slider* lineLengthSlider = new Slider(800, 20, 200, 20, sf::Color::Blue, sf::Color::Cyan, 0, 100, false); // Line length slider
 
 	// Menu elements
 	sf::RectangleShape headerText;             // Header text background
@@ -207,6 +204,13 @@ public:
 		window.setMouseCursor(defaultCursor);
 	}
 
+	void ResetView() {
+		howMuchZoomed = 1;
+		view.setSize(options.window_width, window_height);
+		view.setCenter(window_width / 2, window_height / 2);
+		window.setView(view);
+	}
+
 private:
 	void InitializeKeyActions() {
 		// Populate the key-action vector
@@ -240,6 +244,7 @@ private:
 		keyActions.push_back({ sf::Keyboard::F, [&]() { createExplosionCircles(); } });
 		keyActions.push_back({ sf::Keyboard::J, [&]() { createExplosionRectangles(); } });
 		keyActions.push_back({ sf::Keyboard::R, [&]() { Restart(); } });
+		keyActions.push_back({ sf::Keyboard::N, [&]() { ResetView(); } });
 		keyActions.push_back({ sf::Keyboard::S, [&]() {
 			if (leftMouseClickFlag) scaleFlag = true;
 		} });
@@ -259,10 +264,10 @@ private:
 		keyActions.push_back({ sf::Keyboard::Num7, [&]() { borderless = !borderless; } });
 		keyActions.push_back({ sf::Keyboard::Num0, [&]() { The3BodyProblem(); } });
 
-		keyActions.push_back({ sf::Keyboard::Left, [&]() { view.move(-moveSpeedScreen, 0.f); } });
-		keyActions.push_back({ sf::Keyboard::Right, [&]() { view.move(moveSpeedScreen, 0.f); } });
-		keyActions.push_back({ sf::Keyboard::Up, [&]() { view.move(0.f, -moveSpeedScreen); } });
-		keyActions.push_back({ sf::Keyboard::Down, [&]() { view.move(0.f, moveSpeedScreen); } });
+		keyActions.push_back({ sf::Keyboard::Left, [&]() { view.move(-moveSpeedScreen * howMuchZoomed, 0.f); } });
+		keyActions.push_back({ sf::Keyboard::Right, [&]() { view.move(moveSpeedScreen * howMuchZoomed, 0.f); } });
+		keyActions.push_back({ sf::Keyboard::Up, [&]() { view.move(0.f, -moveSpeedScreen * howMuchZoomed); } });
+		keyActions.push_back({ sf::Keyboard::Down, [&]() { view.move(0.f, moveSpeedScreen * howMuchZoomed); } });
 
 	}
 
@@ -399,14 +404,16 @@ private:
 				if (event.mouseWheelScroll.delta > 0) {
 
 					if (!scaleFlag) {
-						view.zoom(1.f / ZOOM_FACTOR);
+						view.zoom(1.f / zoomFactor);
+						howMuchZoomed *= 1.f / zoomFactor;
 					}
 					mouseFlagScrollUp = true;
 				}
 
 				else if (event.mouseWheelScroll.delta < 0) {
 					if (!scaleFlag) {
-						view.zoom(ZOOM_FACTOR);
+						view.zoom(zoomFactor);
+						howMuchZoomed *= zoomFactor;
 					}
 					mouseFlagScrollDown = true;
 				}
@@ -607,17 +614,17 @@ private:
 	}
 
 	void createExplosionCircles() override {
-		objectList.CreateNewCircle(options.gravity, explosionColor, sf::Vector2f(currentMousePos.x + 3, currentMousePos.y + 3), initialVel);
+		objectList.CreateNewCircle(options.gravity, hueToRGB(options.explosionColor), sf::Vector2f(currentMousePos.x + 3, currentMousePos.y + 3), initialVel);
 		for (size_t i = 0; i < 50; i++) {
-			objectList.CreateNewCircle(options.gravity, explosionColor, currentMousePos, initialVel);
+			objectList.CreateNewCircle(options.gravity, hueToRGB(options.explosionColor), currentMousePos, initialVel);
 			objCount++;
 		}
 	}
 
 	void createExplosionRectangles() override {
-		objectList.CreateNewRectangle(options.gravity, explosionColor, sf::Vector2f(currentMousePos.x + 3, currentMousePos.y + 3));
+		objectList.CreateNewRectangle(options.gravity, hueToRGB(options.explosionColor), sf::Vector2f(currentMousePos.x + 3, currentMousePos.y + 3));
 		for (size_t i = 0; i < 50; i++) {
-			objectList.CreateNewRectangle(options.gravity, explosionColor, currentMousePos);
+			objectList.CreateNewRectangle(options.gravity, hueToRGB(options.explosionColor), currentMousePos);
 			objCount++;
 		}
 	}
@@ -625,9 +632,9 @@ private:
 	void handleSliders() {
 		for (auto& slider:slidersVec)
 		{
-			if (slider->containMouse(currentMousePos))
+			if (slider->containMouse(currentMousePos, howMuchZoomed))
 			{
-				slider->handleClick(window, currentMousePos);
+				slider->handleClick(currentMousePos);
 			}
 		}
 		UpdateValuesSliders();
@@ -635,6 +642,7 @@ private:
 
 	void UpdateValuesSliders() {
 		options.gravity = gravitySlider->getValue();
+		options.explosionColor = colorSlider->getValue();
 		oldGravity = options.gravity;
 		objectList.ChangeGravityForAll(options.gravity);
 		objectList.ChangeLineLengthForAll(lineLengthSlider->getValue() * 5);
@@ -684,11 +692,11 @@ private:
 
 	void SetupSliders() {
 		slidersVec.push_back(gravitySlider);
-		slidersVec.push_back(collisionSlider);
+		slidersVec.push_back(colorSlider);
 		slidersVec.push_back(lineLengthSlider);
 
 		gravitySlider->setValue(options.gravity);
-		collisionSlider->setValue(0);
+		colorSlider->setValue(options.explosionColor);
 		lineLengthSlider->setValue(lineLength);
 	}
 
@@ -743,12 +751,6 @@ private:
 			if (!trashButtonTexture.loadFromFile("Visuals/Buttons/TrashButton.png")) {
 				throw std::runtime_error("Failed to load texture");
 			}
-			if (!connectButtonTexture.loadFromFile("Visuals/Buttons/ConnectButton.png")) {
-				throw std::runtime_error("Failed to load texture");
-			}
-			if (!chainButtonTexture.loadFromFile("Visuals/Buttons/ChainButton.png")) {
-				throw std::runtime_error("Failed to load texture");
-			}
 			if (!paticleButtonTexture.loadFromFile("Visuals/Buttons/ParticleButton.png")) {
 				throw std::runtime_error("Failed to load texture");
 			}
@@ -758,8 +760,6 @@ private:
 			addButtonTexture.setSmooth(true);
 			planetButtonTexture.setSmooth(true);
 			trashButtonTexture.setSmooth(true);
-			connectButtonTexture.setSmooth(true);
-			chainButtonTexture.setSmooth(true);
 			paticleButtonTexture.setSmooth(true);
 			explosionButtonTexture.setSmooth(true);
 		}
@@ -817,35 +817,26 @@ private:
 	}
 
 	void SetupButtons() {
+		int yAdder = 130;
 		Button addButton = Button(85 / textureResizer, 85 / textureResizer,
 			sf::Vector2f(options.window_width - 55, 60), "CIR");
 		addButton.SetTexture(addButtonTexture);
 
 		Button explosionButton = Button(85 / textureResizer, 85 / textureResizer,
-			sf::Vector2f(options.window_width - 55, 190), "EXPLOSION");
+			sf::Vector2f(options.window_width - 55, 60 + yAdder), "EXPLOSION");
 		explosionButton.SetTexture(explosionButtonTexture);
 
-		Button connectButton = Button(85 / textureResizer, 85 / textureResizer,
-			sf::Vector2f(options.window_width - 55, 320), "LINK");
-		connectButton.SetTexture(connectButtonTexture);
-
-		Button chainButton = Button(85 / textureResizer, 85 / textureResizer,
-			sf::Vector2f(options.window_width - 55, 450), "CHAIN");
-		chainButton.SetTexture(chainButtonTexture);
-
 		Button planetButton = Button(85 / textureResizer, 85 / textureResizer,
-			sf::Vector2f(options.window_width - 55, 580), "PLANET");
+			sf::Vector2f(options.window_width - 55, 60 + yAdder*2), "PLANET");
 		planetButton.SetTexture(planetButtonTexture);
 
 		Button trashButton = Button(85 / textureResizer, 85 / textureResizer,
-			sf::Vector2f(options.window_width - 55, 710), "RESTART");
+			sf::Vector2f(options.window_width - 55, 60 + yAdder*3), "RESTART");
 		trashButton.SetTexture(trashButtonTexture);
 
 
 		buttons.push_back(addButton);
 		buttons.push_back(explosionButton);
-		buttons.push_back(connectButton);
-		buttons.push_back(chainButton);
 		buttons.push_back(planetButton);
 		buttons.push_back(trashButton);
 	}
@@ -936,6 +927,28 @@ private:
 		if (elapsed.asSeconds() < deltaTime) {
 			sf::sleep(sf::seconds(deltaTime - elapsed.asSeconds()));
 		}
+	}
+
+	sf::Color hueToRGB(float hue) {
+		hue = fmod(hue, 360.f);
+		if (hue < 0) hue += 360.f;
+
+		float c = 1.0f;
+		float x = 1.0f - fabs(fmod(hue / 60.f, 2.f) - 1.0f);
+
+		float r = 0, g = 0, b = 0;
+		if (hue < 60) { r = c; g = x; b = 0; }
+		else if (hue < 120) { r = x; g = c; b = 0; }
+		else if (hue < 180) { r = 0; g = c; b = x; }
+		else if (hue < 240) { r = 0; g = x; b = c; }
+		else if (hue < 300) { r = x; g = 0; b = c; }
+		else { r = c; g = 0; b = x; }
+
+		return sf::Color(
+			static_cast<sf::Uint8>(r * 255),
+			static_cast<sf::Uint8>(g * 255),
+			static_cast<sf::Uint8>(b * 255)
+		);
 	}
 
 	//TODO: I dont need it i think

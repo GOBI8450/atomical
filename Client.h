@@ -386,16 +386,16 @@ private:
 			objCount = 0;
 		} });
 
-		keyActions.push_back({ sf::Keyboard::BackSpace, [&]() {
-			if (leftMouseClickFlag) {
-				objectList.DeleteThisObj(thisBallPointer);
-				send_tcp_message("DEL^" + thisBallPointer->GetIDStr() + ";");
-			}
-		} });
+		//keyActions.push_back({ sf::Keyboard::BackSpace, [&]() {
+		//	if (leftMouseClickFlag) {
+		//		objectList.DeleteThisObj(thisBallPointer);
+		//		send_tcp_message("DEL^" + thisBallPointer->GetIDStr() + ";");
+		//	}
+		//} });
 
-		keyActions.push_back({ sf::Keyboard::Space, [&]() {
-			send_tcp_message("TOGGLE_FREEZE;");
-		} });
+		//keyActions.push_back({ sf::Keyboard::Space, [&]() {
+		//	send_tcp_message("TOGGLE_FREEZE;");
+		//} });
 
 		keyActions.push_back({ sf::Keyboard::R, [&]() {
 			send_udp_message("RESTART;");
@@ -406,36 +406,36 @@ private:
 			send_udp_message("CIR,10;"); // Add circles
 		} });
 
-		keyActions.push_back({ sf::Keyboard::T, [&]() {
-			send_udp_message("REC,10;"); // Add rectangles
-		} });
+		//keyActions.push_back({ sf::Keyboard::T, [&]() {
+		//	send_udp_message("REC,10;"); // Add rectangles
+		//} });
 
-		keyActions.push_back({ sf::Keyboard::L, [&]() {
-			createPlanet();
-			send_udp_message("PLANET*" + Vector2fToString(currentMousePos) + ";");
-		} });
+		//keyActions.push_back({ sf::Keyboard::L, [&]() {
+		//	createPlanet();
+		//	send_udp_message("PLANET*" + Vector2fToString(currentMousePos) + ";");
+		//} });
 
-		keyActions.push_back({ sf::Keyboard::Q, [&]() {
-			send_udp_message("FIXEDCIRCLE*" + Vector2fToString(currentMousePos) + ";");
-		} });
+		//keyActions.push_back({ sf::Keyboard::Q, [&]() {
+		//	send_udp_message("FIXEDCIRCLE*" + Vector2fToString(currentMousePos) + ";");
+		//} });
 
 		// ** Particle Actions **
-		keyActions.push_back({ sf::Keyboard::E, [&]() {
-			send_udp_message("PARTICLE:" + std::to_string(particleType) + "*" + Vector2fToString(currentMousePos) + ";");
-		} });
+		//keyActions.push_back({ sf::Keyboard::E, [&]() {
+		//	send_udp_message("PARTICLE:" + std::to_string(particleType) + "*" + Vector2fToString(currentMousePos) + ";");
+		//} });
 
 		keyActions.push_back({ sf::Keyboard::F, [&]() {
 			send_udp_message("EXPLOSION:CIR*" + Vector2fToString(currentMousePos) + ";");
 		} });
 
-		keyActions.push_back({ sf::Keyboard::J, [&]() {
-			send_udp_message("EXPLOSION:REC*" + Vector2fToString(currentMousePos) + ";");
-		} });
+		//keyActions.push_back({ sf::Keyboard::J, [&]() {
+		//	send_udp_message("EXPLOSION:REC*" + Vector2fToString(currentMousePos) + ";");
+		//} });
 
 		// ** Linking and Simulation **
-		keyActions.push_back({ sf::Keyboard::H, [&]() {
-			send_udp_message("LINK:RND;");
-		} });
+		//keyActions.push_back({ sf::Keyboard::H, [&]() {
+		//	send_udp_message("LINK:RND;");
+		//} });
 
 		keyActions.push_back({ sf::Keyboard::Num0, [&]() {
 			send_udp_message("3BODYPROBLEM;");
@@ -453,30 +453,30 @@ private:
 			send_udp_message("BORDER!" + std::to_string(borderless) + ";");
 		} });
 
-		keyActions.push_back({ sf::Keyboard::S, [&]() {
-			if (leftMouseClickFlag) {
-				scaleFlag = !scaleFlag;
-				send_tcp_message("SCALE;");
-			}
-		} });
+		//keyActions.push_back({ sf::Keyboard::S, [&]() {
+		//	if (leftMouseClickFlag) {
+		//		scaleFlag = !scaleFlag;
+		//		send_tcp_message("SCALE;");
+		//	}
+		//} });
 
 
 		//Local events:
-		keyActions.push_back({ sf::Keyboard::X, [&]() {
-			ToggleChainMode();
-		} });
+		//keyActions.push_back({ sf::Keyboard::X, [&]() {
+		//	ToggleChainMode();
+		//} });
 
-		keyActions.push_back({ sf::Keyboard::K, [&]() {
-			createConnectedObjMode = !createConnectedObjMode;
-			previousBallID = thisBallPointer->GetID();
-		} });
+		//keyActions.push_back({ sf::Keyboard::K, [&]() {
+		//	createConnectedObjMode = !createConnectedObjMode;
+		//	previousBallID = thisBallPointer->GetID();
+		//} });
 
 		// ** Particle Type Switches **
 		keyActions.push_back({ sf::Keyboard::Num1, [&]() { typeOfLink = 1; } });
 		keyActions.push_back({ sf::Keyboard::Num2, [&]() { typeOfLink = 2; } });
-		keyActions.push_back({ sf::Keyboard::Num3, [&]() { particleType = 3; } });
+	/*	keyActions.push_back({ sf::Keyboard::Num3, [&]() { particleType = 3; } });
 		keyActions.push_back({ sf::Keyboard::Num4, [&]() { particleType = 4; } });
-		keyActions.push_back({ sf::Keyboard::Num5, [&]() { particleType = 5; } });
+		keyActions.push_back({ sf::Keyboard::Num5, [&]() { particleType = 5; } });*/
 
 		// ** View Movement **
 		keyActions.push_back({ sf::Keyboard::Left, [&]() { view.move(-moveSpeedScreen, 0.f); } });
