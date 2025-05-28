@@ -83,8 +83,13 @@ public:
 
     // Clears all objects from the grid
     void clear() override {
+        // Clear all stored object pointers
         gridMap.clear();
-        //gridMap.rehash(0);
+        // Free any bucket memory held by the map
+        gridMap.rehash(0);
+        // Clear the hash key history
+        hashKeyVec.clear();
+        hashKeyVec.shrink_to_fit();
     }
 
     // Gets the size of the grid map

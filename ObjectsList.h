@@ -39,27 +39,33 @@ public:
 
 	// Destructor: Ensures all dynamically allocated memory is freed
 	~ObjectsList() {
-		DeleteAll(); // Clean up all objects
+		DeleteAll();
+		delete grid;
+		grid = nullptr;
 	}
 
 	// Deletes all objects and clears the lists to prevent memory leaks
 	void DeleteAll() {
-		for (auto ball : objList) {
-			delete ball;
+		// 1. Clear connection links first to drop references to objects
+		connectedObjects.Clear();
+
+		// 2. Clear grid of object pointers (so it no longer references these objects)
+		grid->clear();
+
+		// 3. Delete all dynamic objects
+		for (BaseShape* obj : objList) {
+			delete obj;
 		}
 		objList.clear();
-		planetList.clear();
-		connectedObjects.Clear();
+
+		// 4. Clear other object lists 
 		fixedObjects.clear();
+		planetList.clear();
 		electricalParticlesList.clear();
+
 		objCount = 0;
-		grid->clear();
-		//std::cout << "After DeleteAll: "
-		//	<< "objList = " << objList.size()
-		//	<< ", fixedObjects = " << fixedObjects.size()
-		//	<< ", electricalParticlesList = " << electricalParticlesList.size()
-		//	<< std::endl;
 	}
+
 
 	// Creates a new circle object with specified properties and adds it to the object list
 	BaseShape* CreateNewCircle(float gravity, sf::Color color, sf::Vector2f pos, sf::Vector2f initialVel) {
