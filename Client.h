@@ -36,6 +36,7 @@ public:
 
 	// the main function to run the client
 	std::string Run() override{
+		screen = "ONLINE"; // Set the initial screen to ONLINE
 		currentMousePos = window.mapPixelToCoords(sf::Mouse::getPosition(window), view);
 		handleAllEvents();
 		renderSimulation();
@@ -251,7 +252,7 @@ private:
 				TouchedOnceLeftClick = true;
 
 				window.setMouseCursor(handCursor);
-				thisBallPointer->SetOutline(outlineColor, 5);
+				//thisBallPointer->SetOutline(outlineColor, 5);
 				// Store the current color
 				previousColor = thisBallPointer->GetColor();
 				// Darken the color
@@ -288,7 +289,7 @@ private:
 			if (releasedObjID == thisObjID && thisObjID != -1) {
 				window.setMouseCursor(defaultCursor);
 				thisBallPointer->setColor(previousColor);
-				thisBallPointer->SetOutline(outlineColor, 0);
+				//thisBallPointer->SetOutline(outlineColor, 0);
 			}
 
 			leftMouseClickFlag = false;

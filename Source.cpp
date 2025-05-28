@@ -60,10 +60,6 @@ bool mainLoop(std::string& screen, PhysicsSimulationActions& simulationActions, 
         // Handle online simulation
         screen = client.Run();
     }
-    else if (screen == "CONNECT_ONLINE") {
-        // Handle connecting to online server
-        screen = client.Run();
-    }
     else if (screen == "MAIN MENU") {
         // Handle main menu
         screen = mainMenu.handleMainMenu();

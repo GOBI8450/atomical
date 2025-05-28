@@ -74,7 +74,7 @@ public:
         Button offlineButtonMainMenu = Button(534 / textureResizer, 274 / textureResizer,
             sf::Vector2f(options.window_width / 2 - 200, 450), "OFFLINE");
         Button onlineButtonMainMenu = Button(534 / textureResizer, 274 / textureResizer,
-            sf::Vector2f(options.window_width / 2 + 200, 450), "CONNECT_ONLINE");
+            sf::Vector2f(options.window_width / 2 + 200, 450), "ONLINE");
         Button settingsButtonMainMenu = Button(534 / textureResizer, 274 / textureResizer,
             sf::Vector2f(options.window_width / 2, 675), "SETTINGS");
         Button exitButtonMainMenu = Button(534 / textureResizer, 274 / textureResizer,
