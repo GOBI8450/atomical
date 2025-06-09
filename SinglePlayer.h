@@ -170,6 +170,7 @@ public:
 		setupGradient();
 	}
 
+	// the main function to run the SinglePlayer simulation
 	std::string Run() override{
 		currentMousePos = window.mapPixelToCoords(sf::Mouse::getPosition(window), view);
 		handleAllEvents();
@@ -177,10 +178,12 @@ public:
 		return screen;
 	}
 
+	// set the screen to a new value
 	void SetScreen(std::string newScreen) override{
 		screen = newScreen;
 	}
 
+	// Restart the simulation
 	void Restart() override{
 		objectList.DeleteAll();
 		deletedSomething = true;
@@ -204,6 +207,7 @@ public:
 		window.setMouseCursor(defaultCursor);
 	}
 
+	// Reset the view to the default state
 	void ResetView() {
 		howMuchZoomed = 1;
 		view.setSize(options.window_width, window_height);
@@ -212,6 +216,7 @@ public:
 	}
 
 private:
+	// initialize key actions
 	void InitializeKeyActions() {
 		// Populate the key-action vector
 		keyActions.push_back({ sf::Keyboard::Escape, [&]() {
@@ -271,6 +276,7 @@ private:
 
 	}
 
+	// hadle events from the sfml events
 	void handleEventsFromPollEvent(sf::Event event) override {
 		if (event.type == sf::Event::Closed) { window.close(); }
 		//if (event.type == sf::Event::Resized) {
@@ -288,6 +294,7 @@ private:
 		handleMouseWheel(event);
 	}
 
+	// Handles all events in the main loop
 	void handleAllEvents() override {
 		sf::Event event;
 		while (window.pollEvent(event)) {
@@ -298,6 +305,7 @@ private:
 		handleMouseInteraction();
 	}
 
+	// handles key press events
 	void handleKeyPress(sf::Event event) override {
 		if (event.type == sf::Event::KeyPressed) {
 			for (const auto& [key, action] : keyActions) {
@@ -309,6 +317,7 @@ private:
 		}
 	} 
 
+	// Handles mouse clicks and interactions
 	void handleMouseClick() override {
 		//Left click:
 		if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && leftMouseClickFlag == false && !deletedSomething) {
@@ -339,6 +348,7 @@ private:
 		}
 	}
 
+	// handle mouse release events
 	void handleMouseRelase(sf::Event event) override {
 		if (event.type == sf::Event::MouseButtonReleased) {
 			//Left mouse button:
@@ -364,6 +374,7 @@ private:
 		}
 	}
 
+	// Handles mouse interactions such as clicking and dragging
 	void handleMouseInteraction() override {
 		if (leftMouseClickFlag && !deletedSomething) { // Check if a circle is found
 			thisBallPointer->SetPosition(currentMousePos); // Set position of the found ball
@@ -397,6 +408,7 @@ private:
 		}
 	}
 
+	// Handles mouse wheel events for zooming or scaling
 	void handleMouseWheel(sf::Event event) override {
 		if (event.type == sf::Event::MouseWheelScrolled) {
 			if (event.mouseWheelScroll.wheel == sf::Mouse::VerticalWheel) {
@@ -425,6 +437,7 @@ private:
 		}
 	}
 
+	// add circles in order with a gradient
 	void AddCirclesInOrder() {
 		for (size_t i = 0; i < 10; i++)
 		{
@@ -445,6 +458,7 @@ private:
 		}
 	}
 
+	// add rectangles in order with a gradient
 	void AddRectanglesInOrder() {
 		for (size_t i = 0; i < 10; i++)
 		{
@@ -463,6 +477,7 @@ private:
 		}
 	}
 
+	// Handles connecting mode of objects in the simulation
 	void toggleConnectingMode() override {
 		if (!connectingMode)
 		{
@@ -478,11 +493,13 @@ private:
 		}
 	}
 
+	//toggle chain mode for creating chains of objects
 	void ToggleChainMode() {
 		createChain = !createChain;
 		previousBallPointer = thisBallPointer;
 	}
 
+	// Toggles fullscreen mode for the window
 	void ToggleFullscreen() {
 		if (!options.fullscreen)
 		{
@@ -500,7 +517,7 @@ private:
 		}
 	}
 
-
+	// create connected objects in the simulation
 	void createConnectedObjects() override {
 		BaseShape* newObject = objectList.CreateNewCircle(options.gravity, gradient[gradientStep], currentMousePos, initialVel);
 		objCount++;
@@ -508,6 +525,7 @@ private:
 		objectList.connectedObjects.ConnectRandom(10, typeOfLink);
 	}
 
+	// create a planet in the simulation
 	void createPlanet() override {
 		planetMode = true;
 		initialVel = sf::Vector2f(200, 0);
@@ -520,6 +538,7 @@ private:
 		objCount++;
 	}
 
+	// create a simulation of the 3-body problem
 	void The3BodyProblem() {
 		planetMode = true;
 		objectList.CreateNewPlanet(7000, sf::Color(205, 28, 24), sf::Vector2f(990, 466.02540), 20, 5.9722 * pow(10, 16));
@@ -528,6 +547,7 @@ private:
 		objCount++;
 	}
 
+	// create an electrical particle in the simulation
 	void createElectricalParticle(int particleType) {
 		double muliplier = 100000000;
 		if (particleType == 3)
@@ -545,6 +565,7 @@ private:
 		objCount++;
 	}
 
+	// create random connected circles in the simulation
 	void CreateRandomConnectedCircles() {
 		BaseShape* newObject = objectList.CreateNewCircle(options.gravity, gradient[gradientStep], currentMousePos, initialVel);
 		objCount += 1;
@@ -552,6 +573,7 @@ private:
 		objectList.connectedObjects.ConnectRandom(10, typeOfLink);
 	}
 
+	// Toggles the freeze state of the simulation
 	void ToggleFreeze() {
 		if (!freeze)
 		{
@@ -567,6 +589,7 @@ private:
 		}
 	}
 
+	// Handles scaling of objects based on mouse scroll input
 	void handleScaling() override {
 		if (scaleFlag && (mouseFlagScrollUp || mouseFlagScrollDown)) {
 			if (Circle* circle = dynamic_cast<Circle*>(thisBallPointer)) {
@@ -579,6 +602,7 @@ private:
 		}
 	}
 
+	// Scales a circle or rectangle based on mouse scroll input
 	void scaleCircle(Circle* circle) override {
 		if (mouseFlagScrollDown && circle->getRadius() > 0.0001) {
 			circle->SetRadiusAndCenter(circle->getRadius() - mouseScrollPower);
@@ -593,6 +617,7 @@ private:
 		}
 	}
 
+	// Scales a rectangle based on mouse scroll input
 	void scaleRectangle(RectangleClass* rectangle) override {
 		if (mouseFlagScrollDown && rectangle->GetHeight() > 0.0001 && rectangle->GetWidth() > 0.0001) {
 			rectangle->SetSizeAndOrigin(rectangle->GetWidth() - mouseScrollPower, rectangle->GetHeight() - mouseScrollPower);
@@ -606,6 +631,7 @@ private:
 		}
 	}
 
+	// Handles connecting objects in the simulation when in connecting mode
 	void handleConnecting() override {
 		if (connectingMode && connecttableBallPointer != previousConnecttableBallPointer)
 		{
@@ -613,6 +639,7 @@ private:
 		}
 	}
 
+	// Creates explosion of circles in the simulation
 	void createExplosionCircles() override {
 		objectList.CreateNewCircle(options.gravity, hueToRGB(options.explosionColor), sf::Vector2f(currentMousePos.x + 3, currentMousePos.y + 3), initialVel);
 		for (size_t i = 0; i < 50; i++) {
@@ -621,6 +648,7 @@ private:
 		}
 	}
 
+	// Creates explosion of rectangles in the simulation
 	void createExplosionRectangles() override {
 		objectList.CreateNewRectangle(options.gravity, hueToRGB(options.explosionColor), sf::Vector2f(currentMousePos.x + 3, currentMousePos.y + 3));
 		for (size_t i = 0; i < 50; i++) {
@@ -629,6 +657,7 @@ private:
 		}
 	}
 
+	// handles the sliders based on user input
 	void handleSliders() {
 		for (auto& slider:slidersVec)
 		{
@@ -640,6 +669,7 @@ private:
 		UpdateValuesSliders();
 	}
 
+	// Updates the values of sliders and applies them to the simulation options
 	void UpdateValuesSliders() {
 		options.gravity = gravitySlider->getValue();
 		options.explosionColor = colorSlider->getValue();
@@ -648,7 +678,8 @@ private:
 		objectList.ChangeLineLengthForAll(lineLengthSlider->getValue() * 5);
 	}
 
-	//visuals
+	//VISUALS:
+	// Renders the simulation frame
 	void renderSimulation() override {
 		updateFPS();
 		window.clear(background_color);
@@ -667,6 +698,7 @@ private:
 		limitFrameRate();
 	}
 
+	// Moves and draws objects in the simulation
 	void MoveAndDrawObjects() override {
 		if (!freeze)
 		{
@@ -681,6 +713,7 @@ private:
 		objectList.DrawObjects(window, currentFPS, planetMode);
 	}
 
+	// initializes the user interface
 	void initializeUI() override {
 		loadResources();
 		setupText();
@@ -690,6 +723,7 @@ private:
 		SetupSliders();
 	}
 
+	// sets up the sliders for user interaction
 	void SetupSliders() {
 		slidersVec.push_back(gravitySlider);
 		slidersVec.push_back(colorSlider);
@@ -700,6 +734,7 @@ private:
 		lineLengthSlider->setValue(lineLength);
 	}
 
+	// Initializes the cursors for the window
 	void initializeCursors() override {
 		if (!defaultCursor.loadFromSystem(sf::Cursor::Arrow) ||
 			!handCursor.loadFromSystem(sf::Cursor::Hand)) {
@@ -708,6 +743,7 @@ private:
 		window.setMouseCursor(defaultCursor);
 	}
 
+	// Loads resources such as fonts, icons, and textures
 	void loadResources() override {
 		if (!font.loadFromFile("visuals/font.ttf")) {
 			throw std::runtime_error("Failed to load font");
@@ -720,10 +756,12 @@ private:
 		loadTextures();
 	}
 
+	// Sets up the gradient for visual effects and colors
 	void setupGradient() override {
 		gradient = GenerateGradient(gradientStepMax);
 	}
 
+	// Generates a gradient of colors based on the start and end colors
 	std::vector<sf::Color> GenerateGradient(int steps) override {
 		std::vector<sf::Color> gradient;
 		float stepR = (endColorGradient.r - startColorGradient.r) / static_cast<float>(steps - 1);
@@ -740,6 +778,7 @@ private:
 		return gradient;
 	}
 
+	// Loads textures for buttons and other UI elements
 	void loadTextures() override {
 		try {
 			if (!addButtonTexture.loadFromFile("Visuals/Buttons/AddButton.png")) {
@@ -768,6 +807,7 @@ private:
 		}
 	}
 
+	// Updates the FPS counter and resets it every frame
 	void updateFPS() override {
 		frameCount++;
 		float timeElapsed = fpsClock.getElapsedTime().asSeconds();
@@ -779,6 +819,7 @@ private:
 		}
 	}
 
+	// Sets up the text elements for the UI
 	void setupText() override {
 		// FPS Text
 		fpsText.setFont(font);
@@ -800,6 +841,7 @@ private:
 		linkingText.setPosition(10, 70);
 	}
 
+	// Sets up the side menu for the UI
 	void SetupSideMenu() {
 		sideMenuRec.setFillColor(sideMenuColor);
 		sideMenuRec.setSize(sf::Vector2f(110, window_height));
@@ -807,6 +849,7 @@ private:
 		sideMenuRec.setPosition(window_width - 110, 0);
 	}
 
+	// Sets up the headers for the UI
 	void SetupHeaders() override {
 		headerText.setSize(sf::Vector2f(400.f, 100.f));
 		headerText.setPosition(
@@ -816,6 +859,7 @@ private:
 		headerText.setFillColor(buttonColor);
 	}
 
+	// Sets up the buttons for the UI
 	void SetupButtons() {
 		int yAdder = 130;
 		Button addButton = Button(85 / textureResizer, 85 / textureResizer,
@@ -841,6 +885,7 @@ private:
 		buttons.push_back(trashButton);
 	}
 
+	// Renders the buttons in the side menu
 	void RenderButtons() {
 		window.draw(sideMenuRec);
 		hovering = false;
@@ -869,6 +914,7 @@ private:
 		leftMouseClickFlag = oldMouseClickFlag;
 	}
 
+	// Renders the sliders
 	void RenderSliders() {
 		for (auto& slider :slidersVec)
 		{
@@ -877,6 +923,7 @@ private:
 		}
 	}
 
+	// Executes the button actions based on the event
 	void ExectuteButtons(std::string event) {
 		if (event != "")
 		{
@@ -907,6 +954,7 @@ private:
 		}
 	}
 
+	// Renders the text elements on the screen
 	void renderTexts() override {
 		std::ostringstream fpsStream;
 		std::ostringstream ballCountStream;
@@ -922,6 +970,7 @@ private:
 		window.draw(ballsCountText);
 	}
 
+	// Limits the frame rate to a specified fps(60 by default)
 	void limitFrameRate() override {
 		sf::Time elapsed = clock.restart();
 		if (elapsed.asSeconds() < deltaTime) {
@@ -929,6 +978,7 @@ private:
 		}
 	}
 
+	// Converts a hue value to an RGB color for sliders
 	sf::Color hueToRGB(float hue) {
 		hue = fmod(hue, 360.f);
 		if (hue < 0) hue += 360.f;
@@ -951,7 +1001,7 @@ private:
 		);
 	}
 
-	//TODO: I dont need it i think
+	//TODO: I dont need it 
 	std::vector<BaseShape> ConvertForSending() override {
 		return std::vector<BaseShape>();
 	}
